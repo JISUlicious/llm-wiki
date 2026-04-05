@@ -49,8 +49,18 @@ Three layers:
    /wiki ingest sources/my-article.md
    /wiki ingest https://arxiv.org/pdf/2201.11903
    /wiki ingest https://blog.example.com/interesting-post
+   /wiki ingest https://raw.githubusercontent.com/user/repo/main/notes.md
    ```
-   Accepts local files, PDF URLs, or web page URLs. The LLM reads the source, discusses key takeaways with you, then creates/updates wiki pages. For best quality on web pages, use [Obsidian Web Clipper](https://obsidian.md/clipper) to save as markdown first.
+   Accepts local files and URLs. All URL types follow the same pattern — download the raw file, convert to markdown if needed, keep both in `sources/`:
+
+   | Input | Pipeline |
+   |-------|----------|
+   | Local `.md` file | Read directly |
+   | PDF URL | `curl → .pdf` + `pdftotext → .md` |
+   | Plain-text URL (`.md`, `.txt`) | `curl → .md` (no conversion) |
+   | HTML web page | `curl → .html` + `pandoc`/Python → `.md` |
+
+   For best quality on web pages, use [Obsidian Web Clipper](https://obsidian.md/clipper) to save as markdown first.
 
 5. **Explore** — open the project folder in [Obsidian](https://obsidian.md). Browse pages, follow links, check the graph view.
 

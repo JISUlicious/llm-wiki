@@ -17,24 +17,55 @@ If the argument is a file path (not a URL), resolve it relative to `{SOURCES}` (
 If the argument is a URL ending in `.pdf` (or pointing to a known PDF host like `arxiv.org/pdf/`):
 1. Download with curl: `curl -sL "{{url}}" -o "{SOURCES}/{{kebab-case-name}}.pdf"`
 2. Extract text with pdftotext: `pdftotext "{SOURCES}/{{kebab-case-name}}.pdf" "{SOURCES}/{{kebab-case-name}}.md"` (requires poppler — if `pdftotext` is not found, tell the user to install it: `brew install poppler`)
-3. Read the extracted markdown file
-4. Both the PDF and extracted `.md` are kept in `{SOURCES}/` as the permanent raw source
+3. Add a metadata header to the `.md` file: `<!-- Source URL: {{url}} | Fetched: {{today}} -->`
+4. Read the extracted markdown file
+5. Both the PDF and extracted `.md` are kept in `{SOURCES}/` as the permanent raw source
 
-### 4c. Web page URL
-If the argument is a URL to a regular web page (HTML):
-1. Use the WebFetch tool to retrieve the page content
-2. Save the fetched content as `{SOURCES}/{{kebab-case-title}}.md` — use the page's `<title>` or a slug derived from the URL for the filename
-3. Add a metadata header to the saved file: `<!-- Source URL: {{url}} | Fetched: {{today}} -->`
-4. Read the saved file and proceed with ingestion
+### 4c. Plain-text URL (.md, .txt, .rst, etc.)
+If the URL points directly to a plain-text or markdown file (e.g., raw GitHub URLs, `.txt`, `.md`, `.rst`, `.org`):
+1. Download directly: `curl -sL "{{url}}" -o "{SOURCES}/{{kebab-case-name}}.md"`
+2. Add a metadata header to the top of the file: `<!-- Source URL: {{url}} | Fetched: {{today}} -->`
+3. Read the file and proceed with ingestion — no conversion needed
 
-**Tip**: For best quality, consider using [Obsidian Web Clipper](https://obsidian.md/clipper) to save articles as clean markdown first, then ingest the local file. Direct URL fetching is convenient but may include navigation cruft or miss dynamic content.
+Detect by file extension in the URL, or by `Content-Type` header if ambiguous. Common cases: `raw.githubusercontent.com/.../*.md`, URLs ending in `.txt`, `.md`, `.rst`.
 
-### 4d. Unsupported format
+### 4d. Web page URL (HTML)
+If the argument is a URL to a regular web page (HTML), follow the same download-then-convert pattern as PDFs:
+1. Download the raw HTML: `curl -sL "{{url}}" -o "{SOURCES}/{{kebab-case-name}}.html"`
+2. Convert to markdown using one of these methods (in preference order):
+   - `pandoc -f html -t markdown -o "{SOURCES}/{{kebab-case-name}}.md" "{SOURCES}/{{kebab-case-name}}.html"` (if pandoc is available — if not, suggest `brew install pandoc`)
+   - Python text extraction via Bash: strip `<script>`, `<style>`, `<svg>` tags, convert headers/lists to markdown, remove remaining HTML tags, decode entities
+3. Add a metadata header to the `.md` file: `<!-- Source URL: {{url}} | Fetched: {{today}} -->`
+4. Both the `.html` and extracted `.md` are kept in `{SOURCES}/` as permanent raw sources
+5. Read the extracted `.md` file and proceed with ingestion
+
+**Tip**: For best quality, use [Obsidian Web Clipper](https://obsidian.md/clipper) to save articles as clean markdown first, then ingest the local file. Direct URL fetching is convenient but may include navigation cruft or miss dynamic content.
+
+### 4e. Unsupported format
 If the URL points to a format that can't be processed (e.g., video, binary), tell the user and suggest alternatives (transcript, summary article, etc.).
+
+### URL handling summary
+
+| URL type | Download | Convert | Keep in `{SOURCES}/` |
+|----------|----------|---------|----------------------|
+| PDF | `curl → .pdf` | `pdftotext → .md` | both `.pdf` + `.md` |
+| Plain text (.md, .txt) | `curl → .md` | none needed | `.md` only |
+| HTML web page | `curl → .html` | `pandoc` or Python → `.md` | both `.html` + `.md` |
+
+## Step 0.5: Assess Source Size
+
+Check the source file size (line count via `wc -l`). If the source exceeds ~2000 lines:
+
+1. **Read in priority order**: title/abstract/introduction first, then results/discussion/conclusion, then methods, then appendix
+2. **Skip low-value sections**: author contributions, acknowledgements, dataset generation details, supplementary tables, full reference lists
+3. **Focus extraction on**: claims, findings, entities, concepts, and notable quotes — not exhaustive methodological detail
+4. If the source is very long (5000+ lines), tell the user the size and confirm which sections to prioritize before reading everything
 
 ## Step 1: Analyze the Source
 
-Read the entire source document. Identify:
+If the source is too large to read in one pass (the Read tool returns a size error or truncated output), read it in sections: first ~500 lines (intro/abstract), then scan for section headings (Grep for `^#` patterns) to identify key parts, then read those parts selectively. You do not need to read every line of a long document — focus on extractable knowledge.
+
+Identify:
 
 - **Key entities**: people, organizations, products, places, events mentioned
 - **Key concepts**: ideas, theories, techniques, patterns, methodologies discussed
