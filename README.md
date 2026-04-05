@@ -1,0 +1,155 @@
+# LLM Wiki for Claude Code
+
+A Claude Code agent skill that builds and maintains a personal knowledge base from raw source documents. Based on [Karpathy's LLM Wiki](https://github.com/karpathy/llm-wiki) pattern.
+
+Instead of RAG — where the LLM re-derives answers from raw chunks on every query — this approach has the LLM **incrementally compile** knowledge into persistent, interlinked markdown pages. Every source you add makes the wiki richer. The knowledge compounds.
+
+You curate sources and ask questions. The LLM does the summarizing, cross-referencing, and bookkeeping.
+
+## How It Works
+
+```
+sources/          You drop documents here (articles, papers, notes)
+    ↓ /wiki ingest
+wiki/             The LLM builds interlinked markdown pages
+    ↓ browse
+Obsidian          You read the wiki in real time via graph view
+```
+
+Three layers:
+
+| Layer | What | Who owns it |
+|-------|------|-------------|
+| `sources/` | Raw documents — articles, papers, notes, images | You (immutable) |
+| `wiki/` | Generated markdown pages — entities, concepts, summaries | The LLM |
+| `CLAUDE.md` | Schema — conventions, page types, domain rules | You + the LLM |
+
+## Commands
+
+| Command | What it does |
+|---------|-------------|
+| `/wiki init` | Bootstrap a new wiki — creates directories, generates a domain-tailored schema |
+| `/wiki ingest sources/file.md` | Process a source into wiki pages with cross-references |
+| `/wiki query "your question"` | Answer a question from the wiki, optionally file the result |
+| `/wiki lint` | Health-check: find broken links, orphan pages, missing cross-references |
+
+## Quick Start
+
+1. **Install** — clone this repo (or copy `.claude/skills/wiki/` into your project)
+
+2. **Initialize** — run `/wiki init` in Claude Code. It will ask about your domain and set everything up:
+   ```
+   /wiki init
+   ```
+
+3. **Add sources** — drop markdown files into `sources/`. Use [Obsidian Web Clipper](https://obsidian.md/clipper) to convert web articles, or just write plain markdown.
+
+4. **Ingest** — tell Claude to process each source:
+   ```
+   /wiki ingest sources/my-article.md
+   ```
+   The LLM reads the source, discusses key takeaways with you, then creates/updates wiki pages.
+
+5. **Explore** — open the project folder in [Obsidian](https://obsidian.md). Browse pages, follow links, check the graph view.
+
+6. **Query** — ask questions against the accumulated knowledge:
+   ```
+   /wiki query "How does X compare to Y?"
+   ```
+
+7. **Maintain** — periodically lint the wiki:
+   ```
+   /wiki lint
+   ```
+
+## What Gets Generated
+
+After ingesting a few sources, your wiki might look like this:
+
+```
+wiki/
+├── index.md                        # Catalog of all pages
+├── log.md                          # Timeline of all operations
+├── overview.md                     # High-level synthesis
+├── entities/
+│   ├── andrej-karpathy.md
+│   └── openai.md
+├── concepts/
+│   ├── transformer-architecture.md
+│   └── attention-mechanism.md
+├── sources/
+│   ├── attention-is-all-you-need.md
+│   └── scaling-laws-for-llms.md
+├── comparisons/
+│   └── gpt4-vs-claude.md
+└── queries/
+    └── how-does-scaling-affect-performance.md
+```
+
+Every page has YAML frontmatter, `[[wikilinks]]` to related pages, and references back to the original sources. Obsidian renders it all as a navigable, graph-connected knowledge base.
+
+## Page Format
+
+All wiki pages follow the same structure:
+
+```markdown
+---
+title: Transformer Architecture
+type: concept
+created: 2026-04-05
+updated: 2026-04-05
+sources:
+  - attention-is-all-you-need.md
+tags:
+  - deep-learning
+  - architecture
+---
+
+# Transformer Architecture
+
+The transformer is a neural network architecture based on
+[[attention-mechanism]]...
+
+## References
+
+- [[attention-is-all-you-need]]
+```
+
+## Design Choices
+
+- **No external dependencies** — pure Claude Code tools (Read, Write, Edit, Glob, Grep). No Python, no vector DB, no search server.
+- **Obsidian-compatible** — `[[wikilinks]]`, YAML frontmatter, folder structure. Open the directory in Obsidian and it just works.
+- **Index-driven navigation** — the LLM reads `wiki/index.md` to find relevant pages. Works well up to hundreds of pages without embedding infrastructure.
+- **Human-in-the-loop** — ingest discusses findings before writing; lint asks before auto-fixing. You stay in control.
+- **Schema is co-evolved** — `CLAUDE.md` starts with sensible defaults and adapts to your domain over time.
+
+## Use Cases
+
+- **Research** — read papers over weeks, build a comprehensive wiki with evolving thesis
+- **Book companion** — file chapters, track characters/themes/plot threads as you read
+- **Personal knowledge** — journal entries, articles, podcast notes, structured over time
+- **Competitive analysis** — accumulate intel from multiple sources into a coherent picture
+- **Course notes** — lectures, readings, assignments woven into an interlinked knowledge graph
+
+## Tips
+
+- **One source at a time** is the recommended workflow. Stay involved — read the summaries, guide emphasis, check the updates.
+- **Batch ingest** works too if you want less supervision. Just drop multiple files and ingest them in sequence.
+- **File good answers** — when `/wiki query` gives a useful synthesis, say yes to filing it. Your explorations compound just like ingested sources.
+- **Use Obsidian graph view** to see the shape of your wiki — what's connected, what's a hub, what's orphaned.
+- **Lint regularly** as the wiki grows. It catches drift, broken links, and gaps you'd miss manually.
+
+## Project Structure
+
+```
+.claude/skills/wiki/
+├── SKILL.md       # Main skill — router + shared conventions
+├── init.md        # Initialize a new wiki
+├── ingest.md      # Process a source document
+├── query.md       # Answer questions from the wiki
+└── lint.md        # Health-check the wiki
+```
+
+## Credits
+
+Based on [llm-wiki](https://github.com/karpathy/llm-wiki) by Andrej Karpathy. This implementation adapts the pattern as a Claude Code agent skill.
