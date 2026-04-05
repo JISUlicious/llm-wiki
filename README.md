@@ -115,10 +115,36 @@ The transformer is a neural network architecture based on
 - [[attention-is-all-you-need]]
 ```
 
+## Obsidian Vault Integration
+
+By default, the wiki lives locally in the project directory. You can point it at an existing Obsidian vault instead — great for iCloud-synced vaults that you browse on your phone/tablet.
+
+During `/wiki init`, answer "yes" to the vault question and provide the path:
+
+```
+~/Library/Mobile Documents/iCloud~md~obsidian/Documents/MyVault
+```
+
+This creates a `.wiki-config.json` at the project root:
+
+```json
+{
+  "vault_path": "~/Library/Mobile Documents/iCloud~md~obsidian/Documents/MyVault",
+  "sources_dir": "sources",
+  "wiki_dir": "wiki"
+}
+```
+
+When `vault_path` is set, all `sources/` and `wiki/` operations read from and write to that vault. When `null` (or the file doesn't exist), everything stays local — fully backward compatible.
+
+- `CLAUDE.md` always stays at the project root (it's Claude Code-specific, not wiki content)
+- No symlinks, no MCP servers, no external tools — just a config file the skill reads
+
 ## Design Choices
 
 - **No external dependencies** — pure Claude Code tools (Read, Write, Edit, Glob, Grep). No Python, no vector DB, no search server.
 - **Obsidian-compatible** — `[[wikilinks]]`, YAML frontmatter, folder structure. Open the directory in Obsidian and it just works.
+- **Vault-aware** — optionally read/write to an existing Obsidian vault (including iCloud-synced vaults) via `.wiki-config.json`.
 - **Index-driven navigation** — the LLM reads `wiki/index.md` to find relevant pages. Works well up to hundreds of pages without embedding infrastructure.
 - **Human-in-the-loop** — ingest discusses findings before writing; lint asks before auto-fixing. You stay in control.
 - **Schema is co-evolved** — `CLAUDE.md` starts with sensible defaults and adapts to your domain over time.

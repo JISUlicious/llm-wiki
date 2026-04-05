@@ -4,12 +4,13 @@ You are ingesting a source document into the wiki. The source path is provided a
 
 ## Pre-flight
 
-1. Read `CLAUDE.md` for domain-specific conventions
-2. Read `wiki/index.md` to understand existing wiki content
-3. Read `wiki/log.md` (last 5-10 entries) to understand recent activity
-4. Verify the source file exists and read it completely
+0. Read `.wiki-config.json` if it exists at the project root. Resolve `{SOURCES}` and `{WIKI}` per the **Path Resolution** rules in SKILL.md. If no config, use `sources/` and `wiki/` relative to project root. Always double-quote paths containing spaces in Bash commands.
+1. Read `CLAUDE.md` (at project root) for domain-specific conventions
+2. Read `{WIKI}/index.md` to understand existing wiki content
+3. Read `{WIKI}/log.md` (last 5-10 entries) to understand recent activity
+4. Verify the source file exists and read it completely. The source path argument is relative to `{SOURCES}` (e.g., if user says `sources/article.md`, resolve to `{SOURCES}/article.md`). If the source path is an absolute path or a URL, use it directly.
 
-If the source file doesn't exist, tell the user and list available files in `sources/`.
+If the source file doesn't exist, tell the user and list available files in `{SOURCES}/`.
 
 ## Step 1: Analyze the Source
 

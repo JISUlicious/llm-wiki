@@ -8,22 +8,48 @@ Ask the user:
 1. **What is this wiki about?** (topic, domain, scope)
 2. **What kinds of sources will you be adding?** (articles, papers, books, notes, transcripts, etc.)
 3. **Any special conventions?** (terminology preferences, important entity types, output formats)
+4. **Do you want to use an existing Obsidian vault?** If yes, provide the full path (e.g., `~/Library/Mobile Documents/iCloud~md~obsidian/Documents/MyVault`). If no, the wiki will be created locally in the project directory.
 
 Wait for their response before proceeding.
 
+## Step 1.5: Create .wiki-config.json
+
+Create `.wiki-config.json` at the **project root** (not inside the vault):
+
+```json
+{
+  "vault_path": null,
+  "sources_dir": "sources",
+  "wiki_dir": "wiki"
+}
+```
+
+- If the user provided a vault path, set `vault_path` to that path (keep `~` — the skill will expand it at runtime).
+- If the user chose local mode, set `vault_path` to `null`.
+- If a vault path was given, verify it exists by running: `ls "$(eval echo <vault_path>)"`. If the path doesn't exist, warn the user and ask them to double-check before continuing.
+
+From this point forward, resolve all `sources/` and `wiki/` paths per the **Path Resolution** rules in SKILL.md. Use `{SOURCES}` and `{WIKI}` as shorthand for the resolved paths. Always double-quote paths in Bash commands.
+
 ## Step 2: Create Directory Structure
 
-Create the following directories (use `mkdir -p`):
+Create the following directories (use `mkdir -p`). If using a vault, create these inside the vault path. Always double-quote paths.
 
 ```
-sources/
-sources/assets/
-wiki/
-wiki/entities/
-wiki/concepts/
-wiki/sources/
-wiki/comparisons/
-wiki/queries/
+{SOURCES}/
+{SOURCES}/assets/
+{WIKI}/
+{WIKI}/entities/
+{WIKI}/concepts/
+{WIKI}/sources/
+{WIKI}/comparisons/
+{WIKI}/queries/
+```
+
+Example for iCloud vault:
+```bash
+mkdir -p "$HOME/Library/Mobile Documents/iCloud~md~obsidian/Documents/MyVault/sources/assets"
+mkdir -p "$HOME/Library/Mobile Documents/iCloud~md~obsidian/Documents/MyVault/wiki/entities"
+# ... etc
 ```
 
 ## Step 3: Generate CLAUDE.md
@@ -95,7 +121,7 @@ tags: list of strings (optional but encouraged)
 This file is co-evolved between you and the LLM. As you work with the wiki, update this schema to reflect new conventions, page types, or workflows that emerge.
 ```
 
-## Step 4: Create wiki/index.md
+## Step 4: Create {WIKI}/index.md
 
 ```markdown
 ---
@@ -130,7 +156,7 @@ _No comparisons yet._
 _No queries yet._
 ```
 
-## Step 5: Create wiki/log.md
+## Step 5: Create {WIKI}/log.md
 
 ```markdown
 ---
@@ -153,7 +179,7 @@ Directories created: sources/, wiki/entities/, wiki/concepts/, wiki/sources/, wi
 Schema generated: CLAUDE.md.
 ```
 
-## Step 6: Create wiki/overview.md
+## Step 6: Create {WIKI}/overview.md
 
 ```markdown
 ---

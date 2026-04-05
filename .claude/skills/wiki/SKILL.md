@@ -22,6 +22,29 @@ If no command or an unrecognized command is given, show the usage help above.
 
 All operations MUST follow these conventions:
 
+### Path Resolution (Vault Configuration)
+
+Before any operation, check if `.wiki-config.json` exists at the project root. If it does, read it to determine where the wiki lives:
+
+```json
+{
+  "vault_path": "/Users/someone/Library/Mobile Documents/iCloud~md~obsidian/Documents/MyVault",
+  "sources_dir": "sources",
+  "wiki_dir": "wiki"
+}
+```
+
+**Path resolution rules:**
+- If `vault_path` is set (non-null string): all file operations resolve relative to it.
+  - `sources/` means `{vault_path}/{sources_dir}/`
+  - `wiki/` means `{vault_path}/{wiki_dir}/`
+  - Expand `~` to the home directory (use Bash tilde expansion or `$HOME`)
+- If `vault_path` is null or `.wiki-config.json` doesn't exist: resolve relative to the project root (default behavior).
+- `CLAUDE.md` always lives at the **project root**, not inside the vault.
+- **IMPORTANT**: Always double-quote paths in Bash commands — iCloud vault paths contain spaces (e.g., `"Mobile Documents"`).
+
+When referencing resolved paths in this document and sub-operation files, we use `{SOURCES}` for the resolved sources directory and `{WIKI}` for the resolved wiki directory. In practice, substitute the actual resolved paths.
+
 ### Directory Structure
 
 ```

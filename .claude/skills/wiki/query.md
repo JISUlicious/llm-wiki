@@ -4,8 +4,9 @@ You are answering a question using the wiki as your knowledge base. The question
 
 ## Pre-flight
 
-1. Read `CLAUDE.md` for domain-specific conventions
-2. Read `wiki/index.md` to understand the full scope of the wiki
+0. Read `.wiki-config.json` if it exists at the project root. Resolve `{WIKI}` per the **Path Resolution** rules in SKILL.md. If no config, use `wiki/` relative to project root. Always double-quote paths containing spaces in Bash commands.
+1. Read `CLAUDE.md` (at project root) for domain-specific conventions
+2. Read `{WIKI}/index.md` to understand the full scope of the wiki
 
 ## Step 1: Find Relevant Pages
 

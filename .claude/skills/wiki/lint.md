@@ -4,9 +4,10 @@ You are performing a health check on the wiki. Scan all pages and report issues.
 
 ## Pre-flight
 
-1. Read `CLAUDE.md` for domain-specific conventions
-2. Read `wiki/index.md`
-3. Glob all markdown files in `wiki/**/*.md`
+0. Read `.wiki-config.json` if it exists at the project root. Resolve `{WIKI}` per the **Path Resolution** rules in SKILL.md. If no config, use `wiki/` relative to project root. Always double-quote paths containing spaces in Bash commands.
+1. Read `CLAUDE.md` (at project root) for domain-specific conventions
+2. Read `{WIKI}/index.md`
+3. Glob all markdown files in `{WIKI}/**/*.md`
 
 ## Checks to Perform
 
