@@ -1,6 +1,6 @@
 # Wiki Ingest Operation
 
-You are ingesting a source document into the wiki. The source path is provided as an argument (e.g., `sources/article-title.md`).
+You are ingesting a source document into the wiki. The argument can be a local file path (e.g., `sources/article-title.md`), a URL to a PDF, or a URL to a web page.
 
 ## Pre-flight
 
@@ -8,9 +8,29 @@ You are ingesting a source document into the wiki. The source path is provided a
 1. Read `CLAUDE.md` (at project root) for domain-specific conventions
 2. Read `{WIKI}/index.md` to understand existing wiki content
 3. Read `{WIKI}/log.md` (last 5-10 entries) to understand recent activity
-4. Verify the source file exists and read it completely. The source path argument is relative to `{SOURCES}` (e.g., if user says `sources/article.md`, resolve to `{SOURCES}/article.md`). If the source path is an absolute path or a URL, use it directly.
+4. **Resolve the source** — determine the input type and get readable content:
 
-If the source file doesn't exist, tell the user and list available files in `{SOURCES}/`.
+### 4a. Local file
+If the argument is a file path (not a URL), resolve it relative to `{SOURCES}` (e.g., `sources/article.md` → `{SOURCES}/article.md`). If it's an absolute path, use it directly. Read the file. If it doesn't exist, list available files in `{SOURCES}/`.
+
+### 4b. PDF URL
+If the argument is a URL ending in `.pdf` (or pointing to a known PDF host like `arxiv.org/pdf/`):
+1. Download with curl: `curl -sL "{{url}}" -o "{SOURCES}/{{kebab-case-name}}.pdf"`
+2. Extract text with pdftotext: `pdftotext "{SOURCES}/{{kebab-case-name}}.pdf" "{SOURCES}/{{kebab-case-name}}.md"` (requires poppler — if `pdftotext` is not found, tell the user to install it: `brew install poppler`)
+3. Read the extracted markdown file
+4. Both the PDF and extracted `.md` are kept in `{SOURCES}/` as the permanent raw source
+
+### 4c. Web page URL
+If the argument is a URL to a regular web page (HTML):
+1. Use the WebFetch tool to retrieve the page content
+2. Save the fetched content as `{SOURCES}/{{kebab-case-title}}.md` — use the page's `<title>` or a slug derived from the URL for the filename
+3. Add a metadata header to the saved file: `<!-- Source URL: {{url}} | Fetched: {{today}} -->`
+4. Read the saved file and proceed with ingestion
+
+**Tip**: For best quality, consider using [Obsidian Web Clipper](https://obsidian.md/clipper) to save articles as clean markdown first, then ingest the local file. Direct URL fetching is convenient but may include navigation cruft or miss dynamic content.
+
+### 4d. Unsupported format
+If the URL points to a format that can't be processed (e.g., video, binary), tell the user and suggest alternatives (transcript, summary article, etc.).
 
 ## Step 1: Analyze the Source
 

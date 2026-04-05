@@ -29,7 +29,7 @@ Three layers:
 | Command | What it does |
 |---------|-------------|
 | `/wiki init` | Bootstrap a new wiki — creates directories, generates a domain-tailored schema |
-| `/wiki ingest sources/file.md` | Process a source into wiki pages with cross-references |
+| `/wiki ingest <source>` | Process a source (local file, PDF URL, or web page URL) into wiki pages |
 | `/wiki query "your question"` | Answer a question from the wiki, optionally file the result |
 | `/wiki lint` | Health-check: find broken links, orphan pages, missing cross-references |
 
@@ -47,8 +47,10 @@ Three layers:
 4. **Ingest** — tell Claude to process each source:
    ```
    /wiki ingest sources/my-article.md
+   /wiki ingest https://arxiv.org/pdf/2201.11903
+   /wiki ingest https://blog.example.com/interesting-post
    ```
-   The LLM reads the source, discusses key takeaways with you, then creates/updates wiki pages.
+   Accepts local files, PDF URLs, or web page URLs. The LLM reads the source, discusses key takeaways with you, then creates/updates wiki pages. For best quality on web pages, use [Obsidian Web Clipper](https://obsidian.md/clipper) to save as markdown first.
 
 5. **Explore** — open the project folder in [Obsidian](https://obsidian.md). Browse pages, follow links, check the graph view.
 
