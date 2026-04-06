@@ -169,6 +169,14 @@ Commit message format mirrors the log entry:
 
 This is opt-in — always ask, never auto-commit.
 
+### Scaling
+
+At small scale (~100 sources, hundreds of pages), the index file + Grep is sufficient for navigation. As the wiki grows beyond this:
+
+- **[qmd](https://github.com/tobi/qmd)** — a local search engine for markdown files with hybrid BM25/vector search and LLM re-ranking, all on-device. It has both a CLI (so the LLM can shell out to it) and an MCP server (so the LLM can use it as a native tool). Set it up to index `{WIKI}/` for full-text search across all wiki pages.
+- If qmd or another search tool is available, the query operation should prefer it over Grep for finding relevant pages in Step 1.
+- The index file remains useful as a human-browsable catalog even when search is available.
+
 ### Reading CLAUDE.md
 
 Before any operation, check if `CLAUDE.md` exists at the project root. If it does, read it first — it contains domain-specific conventions that override or extend these defaults.

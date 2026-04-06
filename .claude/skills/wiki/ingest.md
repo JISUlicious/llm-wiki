@@ -92,7 +92,13 @@ Identify:
 - **Relationships**: how entities and concepts relate to each other
 - **Notable quotes**: important or quotable passages (with attribution)
 
-If the source contains image references, note them but focus on the text content. You can read images separately if they seem important to understanding the content.
+### Image handling
+
+If the source contains image references (e.g., `![alt](path)` or `<img>` tags):
+1. List the image references found and note what they appear to depict (from alt text or context)
+2. If images are local files in `{SOURCES}/assets/` or elsewhere on disk, offer to read important ones via the Read tool (which can view images) to extract additional context
+3. Note any image-derived insights in the source summary under a "Figures" subsection
+4. If images are remote URLs that no longer resolve, note them as broken references
 
 ## Step 2: Discuss with User
 
@@ -118,6 +124,8 @@ sources:
   - {{original-filename}}
 tags:
   - {{relevant tags}}
+status: complete
+importance: {{high if foundational/seminal/widely-cited, medium for typical sources, low for minor/supplementary}}
 ---
 
 # {{Source Title}}
@@ -165,6 +173,8 @@ For each significant entity identified:
 
 **If the entity page doesn't exist** and the entity is significant enough (mentioned substantively, not just in passing):
 - Create `wiki/entities/{{kebab-case-name}}.md` with full frontmatter
+- Set `status: draft` if created from limited info in a single source; `status: complete` if substantial
+- Set `importance: high` for major entities (key researchers, foundational models), `medium` default, `low` for minor mentions
 - Write a description based on what this source says about the entity
 - Link to the source summary page and any related entity/concept pages
 
@@ -173,7 +183,7 @@ For each significant entity identified:
 Same logic as entities, but in `wiki/concepts/`:
 
 **If exists**: integrate new information, update sources, add cross-references
-**If new and significant**: create `wiki/concepts/{{kebab-case-name}}.md`
+**If new and significant**: create `wiki/concepts/{{kebab-case-name}}.md`. Set `status: draft` if derived from limited discussion in one source; `status: complete` if the concept is thoroughly covered. Set `importance` based on centrality to the wiki's domain.
 
 Concept pages should explain:
 - What the concept is

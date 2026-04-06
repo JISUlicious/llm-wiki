@@ -229,3 +229,7 @@ Tell the user what was created and suggest next steps:
 - Run `/wiki ingest sources/<filename>` to process them
 - Open the directory in Obsidian to browse the wiki
 - Review and customize `CLAUDE.md` as conventions evolve
+- **Recommended Obsidian settings**:
+  - Settings → Files and links → set "Attachment folder path" to `sources/assets/` — this ensures images from clipped articles are saved locally where the LLM can read them
+  - Consider installing the **Dataview** plugin for dynamic queries over page frontmatter
+  - Consider installing the **Marp** plugin if you want slide deck generation from wiki content

@@ -59,6 +59,18 @@ Choose the best format for the question. Combine multiple formats when useful.
   WHERE contains(tags, "reasoning")
   SORT updated DESC
   ```
+- **Marp slide deck** — for presentation-style output. Use Marp markdown syntax (Obsidian has a Marp plugin). Separate slides with `---` and use front matter `marp: true`:
+  ```markdown
+  ---
+  marp: true
+  ---
+  # Slide Title
+  - Key point 1
+  - Key point 2
+  ---
+  # Next Slide
+  ```
+  Best for "summarize X for a presentation" or "give me an overview I can present."
 - **Combination** — prose with an embedded table or diagram is often the best format for complex answers
 
 ## Step 4: Offer to File
@@ -76,6 +88,8 @@ If yes:
    updated: {{today}}
    sources: [{{list of source files that contributed}}]
    tags: [{{relevant tags}}]
+   status: complete
+   importance: medium
    ```
 2. Add `[[wikilinks]]` throughout the filed answer
 3. Update `wiki/index.md` — add entry under Queries

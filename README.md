@@ -179,6 +179,14 @@ When `vault_path` is set, all `sources/` and `wiki/` operations read from and wr
 - **Commit often** — after each operation, the skill offers to git commit. Accept to get free version history of your wiki's evolution.
 - **Rich query outputs** — queries can produce comparison tables, Mermaid diagrams, and Dataview snippets, not just prose.
 
+## Scaling
+
+At small scale (~100 sources, hundreds of pages), the index file + grep works well. As the wiki grows:
+
+- **[qmd](https://github.com/tobi/qmd)** — a local search engine for markdown files with hybrid BM25/vector search and LLM re-ranking. Has both a CLI and an MCP server, so the LLM can use it as a native tool. Point it at your `wiki/` directory for full-text search.
+- The index file remains useful as a human-browsable catalog even with search.
+- **Dataview** queries over frontmatter (`status`, `importance`, `tags`) let you filter and sort pages directly in Obsidian.
+
 ## Project Structure
 
 ```

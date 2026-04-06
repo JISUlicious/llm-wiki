@@ -48,11 +48,22 @@ For each wiki page (excluding index.md and log.md), check:
 - `created` field exists and is a valid date
 - `updated` field exists and is a valid date
 - `sources` field exists (can be empty list for overview)
+- `status` field exists and is one of: draft, complete, needs-update
+- `importance` field exists and is one of: high, medium, low
 
 ### 6. Stale Content (Suggestion)
 
 - Pages whose `updated` date is significantly older than the most recent ingest in `wiki/log.md`, AND whose topic has been touched by newer sources
 - Source summary pages that reference source files no longer in `sources/`
+
+### 6b. Unresolved Contradictions (Warning)
+
+Scan all wiki pages for `> [!warning] Contradiction` callouts. These are added during ingest when new information conflicts with existing content. Report each one with:
+- The page containing the contradiction
+- A brief summary of the two conflicting claims
+- Suggest resolution: which source is more authoritative, more recent, or more widely cited?
+
+**How to scan**: Grep all `{WIKI}/**/*.md` for the pattern `\[!warning\] Contradiction`.
 
 ### 7. Cross-Reference Gaps (Suggestion)
 
