@@ -29,9 +29,9 @@ Three layers:
 | Command | What it does |
 |---------|-------------|
 | `/wiki init` | Bootstrap a new wiki — creates directories, generates a domain-tailored schema |
-| `/wiki ingest <source>` | Process a source (local file, PDF URL, or web page URL) into wiki pages |
-| `/wiki query "your question"` | Answer a question from the wiki, optionally file the result |
-| `/wiki lint` | Health-check: find broken links, orphan pages, missing cross-references |
+| `/wiki ingest <source>` | Process a source (local file, URL, or directory for batch) into wiki pages |
+| `/wiki query "your question"` | Answer a question with tables, Mermaid diagrams, Dataview snippets |
+| `/wiki lint` | Health-check: broken links, orphans, cross-refs, knowledge gaps with search suggestions |
 
 ## Quick Start
 
@@ -172,10 +172,12 @@ When `vault_path` is set, all `sources/` and `wiki/` operations read from and wr
 ## Tips
 
 - **One source at a time** is the recommended workflow. Stay involved — read the summaries, guide emphasis, check the updates.
-- **Batch ingest** works too if you want less supervision. Just drop multiple files and ingest them in sequence.
+- **Batch ingest** works too — `/wiki ingest sources/` processes all files with less supervision. Good for ingesting a backlog.
 - **File good answers** — when `/wiki query` gives a useful synthesis, say yes to filing it. Your explorations compound just like ingested sources.
 - **Use Obsidian graph view** to see the shape of your wiki — what's connected, what's a hub, what's orphaned.
-- **Lint regularly** as the wiki grows. It catches drift, broken links, and gaps you'd miss manually.
+- **Lint regularly** as the wiki grows. It catches drift, broken links, gaps, and suggests search queries to fill knowledge holes.
+- **Commit often** — after each operation, the skill offers to git commit. Accept to get free version history of your wiki's evolution.
+- **Rich query outputs** — queries can produce comparison tables, Mermaid diagrams, and Dataview snippets, not just prose.
 
 ## Project Structure
 

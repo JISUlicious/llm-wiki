@@ -61,6 +61,17 @@ For each wiki page (excluding index.md and log.md), check:
 
 **How to scan**: For each entity and concept page name, Grep all other wiki pages for that name (case-insensitive). Flag mentions that aren't wrapped in `[[...]]`.
 
+### 8. Knowledge Gaps (Suggestion)
+
+Identify areas where the wiki's coverage is thin and suggest external sources to look for:
+
+- **Draft pages**: Pages with `status: draft` that have minimal content. Suggest a specific search query to enrich them (e.g., `search "PaLM 2 technical report Google 2023"` to fill out [[palm]]).
+- **Single-source concepts**: Concept pages whose `sources` list has only one entry. Suggest finding additional sources for triangulation and broader perspective.
+- **Stale topics**: Pages where the most recent source is significantly older than the current date. Suggest searching for recent developments.
+- **Mentioned but unexplored**: Topics that appear across multiple pages but have no dedicated page AND no source directly covering them. Suggest a search query.
+
+**How to scan**: Read frontmatter of all wiki pages. For draft pages and single-source pages, generate a concrete search query string the user could paste into Google Scholar, Semantic Scholar, or a search engine.
+
 ## Report Format
 
 Group findings by severity:
@@ -80,6 +91,8 @@ Group findings by severity:
 - [ ] Missing page: "reinforcement learning" mentioned in 3 pages but has no wiki page
 - [ ] Cross-ref gap: wiki/entities/alice.md mentions "Bob" without [[wikilink]]
 - [ ] Stale content: wiki/concepts/old-topic.md not updated since 2 new sources ingested
+- [ ] Knowledge gap: [[palm]] is status:draft with 1 source — search "PaLM 2 technical report Google 2023"
+- [ ] Single source: [[some-concept]] could use more perspectives — search "concept name survey 2024"
 ```
 
 ## Auto-Fix

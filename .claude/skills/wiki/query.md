@@ -39,6 +39,28 @@ Match the answer format to the question:
 - Exploratory question → longer synthesis with connections
 - "What do we know about X?" → comprehensive overview drawing from all relevant pages
 
+### Output format options
+
+Choose the best format for the question. Combine multiple formats when useful.
+
+- **Prose** — default for factual or exploratory questions
+- **Comparison table** — for "X vs Y" questions. Use markdown tables with clear column headers and `[[wikilinks]]` in cells.
+- **Mermaid diagram** — for relationships, timelines, flowcharts, or architecture. Obsidian renders Mermaid natively:
+  ```mermaid
+  graph LR
+    A[["Concept A"]] --> B[["Concept B"]]
+    A --> C[["Concept C"]]
+  ```
+  Use `graph` for relationships, `timeline` for chronology, `flowchart` for processes.
+- **Dataview snippet** — when the answer is "list all X with property Y," generate a Dataview query the user can paste into Obsidian:
+  ```dataview
+  TABLE tags, updated, importance
+  FROM "wiki/concepts"
+  WHERE contains(tags, "reasoning")
+  SORT updated DESC
+  ```
+- **Combination** — prose with an embedded table or diagram is often the best format for complex answers
+
 ## Step 4: Offer to File
 
 After answering, ask the user:

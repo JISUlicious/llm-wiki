@@ -151,6 +151,24 @@ After creating or updating any page:
 2. Scan OTHER wiki pages for mentions of the new/updated page — add backlinks
 3. Ensure the References section lists all source pages that contributed
 
+### Git Workflow
+
+After any operation that modifies wiki files (ingest, query with filing, lint with auto-fix), offer to create a git commit:
+
+> "Would you like me to commit these changes? Message: `ingest: {{Source Title}} — {{N}} pages created, {{N}} updated`"
+
+If the user accepts:
+1. Stage only modified files under `wiki/` and `CLAUDE.md` (not `.claude/` skill files)
+2. Commit with the offered message
+3. Do not push unless the user explicitly asks
+
+Commit message format mirrors the log entry:
+- `ingest: Source Title — N pages created, N updated`
+- `query: Question slug — filed as wiki page`
+- `lint: N errors fixed, N warnings fixed`
+
+This is opt-in — always ask, never auto-commit.
+
 ### Reading CLAUDE.md
 
 Before any operation, check if `CLAUDE.md` exists at the project root. If it does, read it first — it contains domain-specific conventions that override or extend these defaults.

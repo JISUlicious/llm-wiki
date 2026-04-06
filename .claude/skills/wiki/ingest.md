@@ -1,6 +1,6 @@
 # Wiki Ingest Operation
 
-You are ingesting a source document into the wiki. The argument can be a local file path (e.g., `sources/article-title.md`), a URL to a PDF, or a URL to a web page.
+You are ingesting source documents into the wiki. The argument can be a local file path (e.g., `sources/article-title.md`), a URL (PDF, plain-text, or web page), or a directory/glob for batch ingestion (e.g., `sources/` or `sources/*.md`).
 
 ## Pre-flight
 
@@ -51,6 +51,25 @@ If the URL points to a format that can't be processed (e.g., video, binary), tel
 | PDF | `curl → .pdf` | `pdftotext → .md` | both `.pdf` + `.md` |
 | Plain text (.md, .txt) | `curl → .md` | none needed | `.md` only |
 | HTML web page | `curl → .html` | `pandoc` or Python → `.md` | both `.html` + `.md` |
+
+## Batch Mode
+
+If the argument is a directory path (e.g., `sources/`) or a glob pattern (e.g., `sources/*.md`), switch to batch mode:
+
+1. **List files**: Glob the path to find all matching source files. Show the list to the user and confirm before proceeding.
+2. **For each source**: Run Steps 0.5 through 5 (Assess Size → Analyze → Create source summary → Create/update entity pages → Create/update concept pages), but **skip Step 2** (Discuss with User) — auto-proceed without per-source confirmation.
+3. **Cross-reference pass**: Run Step 6 (Cross-Reference Pass) **once at the end** covering ALL new/updated pages, rather than per-source. This is more efficient and catches cross-source links.
+4. **Update index**: Run Step 7 once at the end, adding all new pages.
+5. **Single log entry**: Append one combined entry to `wiki/log.md`:
+   ```markdown
+   ## [{{today}}] ingest | Batch: {{N}} sources
+
+   Batch ingested {{N}} sources: `source1.md`, `source2.md`, ... Pages created: [[list]]. Pages updated: [[list]].
+   ```
+6. **Report**: Summarize all pages created/updated across all sources.
+7. **Git commit**: Offer a single commit at the end covering all changes.
+
+Batch mode trades per-source human oversight for throughput. Recommend it for ingesting a backlog; recommend single-source mode for careful, guided ingestion.
 
 ## Step 0.5: Assess Source Size
 
