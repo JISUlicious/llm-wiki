@@ -2,10 +2,11 @@
 title: Tool Use in LLMs
 type: concept
 created: 2026-04-05
-updated: 2026-04-05
+updated: 2026-04-12
 sources:
   - "ReAct Yao 2022 2210.03629.pdf"
   - "Reflexion Shinn 2023 2303.11366.pdf"
+  - "Agentic AI and the next intelligence explosion.md"
 tags:
   - tool-use
   - agents
@@ -17,7 +18,7 @@ importance: high
 
 # Tool Use in LLMs
 
-**Tool use** refers to the ability of LLMs to interface with external tools, APIs, and environments to perform actions beyond pure text generation. This is one of the key capabilities that transforms LLMs from language generators into **agents**.
+**Tool use** refers to the ability of LLMs to interface with external tools, APIs, and environments to perform actions beyond pure text generation. This is one of the key capabilities that transforms LLMs from language generators into [[agentic-ai]] systems.
 
 ## Core Idea
 
@@ -71,11 +72,22 @@ This loop is the foundation of agent frameworks like LangChain, AutoGPT, and sim
 
 A key development is agents that **learn from failed tool interactions**. [[reflexion]] showed that verbal self-reflection after failures enables agents to improve across trials without any weight updates. This addresses the "error recovery" challenge by converting failures into episodic memory that guides future attempts.
 
+## From Tools to Social Systems
+
+Recent synthesis work argues that tool calls are only one layer of [[agentic-ai]]. [[agentic-ai-and-the-next-intelligence-explosion]] reframes the problem as building larger social systems around those loops: human-AI centaurs, multi-agent delegation, recursive spawning, and institutions that define roles and oversight.
+
+That shifts the emphasis from "can a model call a tool?" to broader systems questions:
+
+- How should multiple agents divide labor?
+- Which disagreements should be surfaced rather than hidden?
+- What protocols govern handoffs, audits, and failure recovery?
+
 ## Open Challenges
 
 - **Tool selection at scale** — choosing the right tool from a large toolbox
 - **Error recovery** — handling failed tool calls gracefully (partially addressed by [[reflexion]])
 - **Multi-step planning** — complex tasks requiring long chains of tool use
+- **Institutional design** — defining durable role structures, oversight, and governance for multi-agent systems
 - **Cost/latency** — each tool call adds latency and token cost
 - **Safety** — preventing harmful actions in real environments
 

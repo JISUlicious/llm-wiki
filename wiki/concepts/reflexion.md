@@ -2,9 +2,10 @@
 title: Reflexion
 type: concept
 created: 2026-04-05
-updated: 2026-04-05
+updated: 2026-04-12
 sources:
   - "Reflexion Shinn 2023 2303.11366.pdf"
+  - "Agentic AI and the next intelligence explosion.md"
 tags:
   - reinforcement-learning
   - self-reflection
@@ -114,7 +115,9 @@ Two types of learning observed in ALFWorld:
 
 ## Impact
 
-Reflexion demonstrated that LLM agents can learn from experience without any weight updates, making it a key paper in the **agentic AI** paradigm. The trial-reflect-retry loop has been adopted widely in agent frameworks and influenced subsequent work on self-improving systems.
+Reflexion demonstrated that LLM agents can learn from experience without any weight updates, making it a key paper in the [[agentic-ai]] paradigm. The trial-reflect-retry loop has been adopted widely in agent frameworks and influenced subsequent work on self-improving systems.
+
+Later synthesis work such as [[agentic-ai-and-the-next-intelligence-explosion]] frames this kind of memory-enabled retry loop as a building block for larger agent ecologies, where performance depends not only on single-agent competence but also on delegation, role structure, and coordination.
 
 ## References
 

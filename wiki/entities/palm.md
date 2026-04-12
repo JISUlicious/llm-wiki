@@ -2,10 +2,11 @@
 title: PaLM
 type: entity
 created: 2026-04-05
-updated: 2026-04-05
+updated: 2026-04-12
 sources:
   - "ReAct Yao 2022 2210.03629.pdf"
   - "Chain-of-Thought Wei 2022 2201.11903.pdf"
+  - "Transformar Vaswani 1706.03762.pdf"
 tags:
   - model
   - google
@@ -22,7 +23,7 @@ importance: medium
 
 - **Developer**: Google Research
 - **Parameters**: 8B, 62B, 540B variants
-- **Architecture**: Dense Transformer
+- **Architecture**: Dense [[transformer-architecture|Transformer]]
 - **Training**: Trained using the Pathways system for efficient distributed training
 
 ## Role in Chain-of-Thought Prompting
