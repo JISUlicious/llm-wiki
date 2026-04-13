@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "PreCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 scripts/pre-compact-save.py",
+            "timeout": 30,
+            "statusMessage": "Saving session transcript..."
+          }
+        ]
+      }
+    ]
+  }
+}

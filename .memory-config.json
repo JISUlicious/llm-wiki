@@ -1,0 +1,9 @@
+{
+  "vault_path": null,
+  "inputs_dir": "inputs",
+  "memory_dir": "memory",
+  "mode": "manual",
+  "auto_consolidate_threshold": 5,
+  "stale_days": 30,
+  "access_count_prune_threshold": 2
+}
