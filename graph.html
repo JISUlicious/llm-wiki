@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Wiki Graph</title>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <style>
+    html, body { margin: 0; padding: 0; height: 100%; font-family: -apple-system, system-ui, sans-serif; background: #fafafa; }
+    #toolbar { position: fixed; top: 12px; left: 12px; z-index: 10; background: rgba(255,255,255,0.95); border: 1px solid #ddd; border-radius: 6px; padding: 10px 14px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); font-size: 13px; max-width: 280px; }
+    #toolbar h3 { margin: 0 0 8px 0; font-size: 14px; }
+    #toolbar .legend { display: flex; flex-direction: column; gap: 4px; }
+    #toolbar .legend-item { display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none; }
+    #toolbar .legend-item.disabled { opacity: 0.3; }
+    #toolbar .swatch { width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; }
+    #toolbar .stats { margin-top: 10px; padding-top: 10px; border-top: 1px solid #eee; color: #666; font-size: 12px; }
+    #toolbar input[type=text] { width: 100%; padding: 4px 6px; margin-top: 4px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; font-size: 12px; }
+    #info { position: fixed; bottom: 12px; right: 12px; z-index: 10; background: rgba(255,255,255,0.95); border: 1px solid #ddd; border-radius: 6px; padding: 10px 14px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); font-size: 13px; max-width: 320px; display: none; }
+    #info h3 { margin: 0 0 6px 0; font-size: 14px; }
+    #info .meta { color: #888; font-size: 12px; }
+    #info a { color: #0366d6; text-decoration: none; }
+    #info a:hover { text-decoration: underline; }
+    svg { width: 100vw; height: 100vh; display: block; }
+    .node circle { stroke: #fff; stroke-width: 1.5px; cursor: pointer; }
+    .node text { font-size: 11px; pointer-events: none; fill: #333; }
+    .node.dimmed circle { opacity: 0.2; }
+    .node.dimmed text { opacity: 0.2; }
+    .link { stroke: #999; stroke-opacity: 0.3; stroke-width: 1px; }
+    .link.dimmed { opacity: 0.1; }
+    .link.highlighted { stroke: #ff7043; stroke-opacity: 0.9; stroke-width: 2px; }
+  </style>
+</head>
+<body>
+  <div id="toolbar">
+    <h3>Wiki Graph</h3>
+    <input type="text" id="search" placeholder="Filter by title…" />
+    <div class="legend" id="legend"></div>
+    <div class="stats" id="stats"></div>
+  </div>
+  <div id="info"></div>
+  <svg></svg>
+
+  <script>
+  const DATA = {"nodes": [{"id": "anthropic", "title": "Anthropic", "type": "entity", "category": "entities", "path": "wiki/entities/anthropic.md"}, {"id": "bert", "title": "BERT", "type": "entity", "category": "entities", "path": "wiki/entities/bert.md"}, {"id": "chris-olah", "title": "Chris Olah", "type": "entity", "category": "entities", "path": "wiki/entities/chris-olah.md"}, {"id": "claude-sonnet", "title": "Claude Sonnet", "type": "entity", "category": "entities", "path": "wiki/entities/claude-sonnet.md"}, {"id": "gpt-1", "title": "GPT-1", "type": "entity", "category": "entities", "path": "wiki/entities/gpt-1.md"}, {"id": "gpt-2", "title": "GPT-2", "type": "entity", "category": "entities", "path": "wiki/entities/gpt-2.md"}, {"id": "gpt-3", "title": "GPT-3", "type": "entity", "category": "entities", "path": "wiki/entities/gpt-3.md"}, {"id": "gpt-4", "title": "GPT-4", "type": "entity", "category": "entities", "path": "wiki/entities/gpt-4.md"}, {"id": "jason-wei", "title": "Jason Wei", "type": "entity", "category": "entities", "path": "wiki/entities/jason-wei.md"}, {"id": "noah-shinn", "title": "Noah Shinn", "type": "entity", "category": "entities", "path": "wiki/entities/noah-shinn.md"}, {"id": "palm", "title": "PaLM", "type": "entity", "category": "entities", "path": "wiki/entities/palm.md"}, {"id": "retro", "title": "RETRO", "type": "entity", "category": "entities", "path": "wiki/entities/retro.md"}, {"id": "shunyu-yao", "title": "Shunyu Yao", "type": "entity", "category": "entities", "path": "wiki/entities/shunyu-yao.md"}, {"id": "vision-transformer", "title": "Vision Transformer", "type": "entity", "category": "entities", "path": "wiki/entities/vision-transformer.md"}, {"id": "activation-steering", "title": "Activation Steering", "type": "concept", "category": "concepts", "path": "wiki/concepts/activation-steering.md"}, {"id": "agentic-ai", "title": "Agentic AI", "type": "concept", "category": "concepts", "path": "wiki/concepts/agentic-ai.md"}, {"id": "agentic-misalignment", "title": "Agentic Misalignment", "type": "concept", "category": "concepts", "path": "wiki/concepts/agentic-misalignment.md"}, {"id": "chain-of-thought-prompting", "title": "Chain-of-Thought Prompting", "type": "concept", "category": "concepts", "path": "wiki/concepts/chain-of-thought-prompting.md"}, {"id": "decoder-only-transformer", "title": "Decoder-Only Transformer", "type": "concept", "category": "concepts", "path": "wiki/concepts/decoder-only-transformer.md"}, {"id": "dense-passage-retrieval", "title": "Dense Passage Retrieval", "type": "concept", "category": "concepts", "path": "wiki/concepts/dense-passage-retrieval.md"}, {"id": "emotion-vectors", "title": "Emotion Vectors", "type": "concept", "category": "concepts", "path": "wiki/concepts/emotion-vectors.md"}, {"id": "functional-emotions", "title": "Functional Emotions", "type": "concept", "category": "concepts", "path": "wiki/concepts/functional-emotions.md"}, {"id": "generative-pretraining", "title": "Generative Pre-Training", "type": "concept", "category": "concepts", "path": "wiki/concepts/generative-pretraining.md"}, {"id": "in-context-learning", "title": "In-Context Learning", "type": "concept", "category": "concepts", "path": "wiki/concepts/in-context-learning.md"}, {"id": "masked-language-modeling", "title": "Masked Language Modeling", "type": "concept", "category": "concepts", "path": "wiki/concepts/masked-language-modeling.md"}, {"id": "react", "title": "ReAct", "type": "concept", "category": "concepts", "path": "wiki/concepts/react.md"}, {"id": "reflexion", "title": "Reflexion", "type": "concept", "category": "concepts", "path": "wiki/concepts/reflexion.md"}, {"id": "retrieval-augmented-generation", "title": "Retrieval-Augmented Generation", "type": "concept", "category": "concepts", "path": "wiki/concepts/retrieval-augmented-generation.md"}, {"id": "reward-hacking", "title": "Reward Hacking", "type": "concept", "category": "concepts", "path": "wiki/concepts/reward-hacking.md"}, {"id": "self-attention", "title": "Self-Attention", "type": "concept", "category": "concepts", "path": "wiki/concepts/self-attention.md"}, {"id": "society-of-thought", "title": "Society of Thought", "type": "concept", "category": "concepts", "path": "wiki/concepts/society-of-thought.md"}, {"id": "sycophancy", "title": "Sycophancy", "type": "concept", "category": "concepts", "path": "wiki/concepts/sycophancy.md"}, {"id": "tool-use-in-llms", "title": "Tool Use in LLMs", "type": "concept", "category": "concepts", "path": "wiki/concepts/tool-use-in-llms.md"}, {"id": "transformer-architecture", "title": "Transformer Architecture", "type": "concept", "category": "concepts", "path": "wiki/concepts/transformer-architecture.md"}, {"id": "agentic-ai-and-the-next-intelligence-explosion", "title": "Agentic AI and the next intelligence explosion", "type": "source", "category": "sources", "path": "wiki/sources/agentic-ai-and-the-next-intelligence-explosion.md"}, {"id": "an-image-is-worth-16x16-words-transformers-for-image-recognition-at-scale", "title": "An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale", "type": "source", "category": "sources", "path": "wiki/sources/an-image-is-worth-16x16-words-transformers-for-image-recognition-at-scale.md"}, {"id": "attention-is-all-you-need", "title": "Attention Is All You Need", "type": "source", "category": "sources", "path": "wiki/sources/attention-is-all-you-need.md"}, {"id": "bert-pre-training-of-deep-bidirectional-transformers", "title": "BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding", "type": "source", "category": "sources", "path": "wiki/sources/bert-pre-training-of-deep-bidirectional-transformers.md"}, {"id": "chain-of-thought-prompting-wei-2022", "title": "Chain-of-Thought Prompting Elicits Reasoning in Large Language Models", "type": "source", "category": "sources", "path": "wiki/sources/chain-of-thought-prompting-wei-2022.md"}, {"id": "dense-passage-retrieval-for-open-domain-question-answering", "title": "Dense Passage Retrieval for Open-Domain Question Answering", "type": "source", "category": "sources", "path": "wiki/sources/dense-passage-retrieval-for-open-domain-question-answering.md"}, {"id": "emotion-concepts-anthropic-2026", "title": "Emotion Concepts and their Function in a Large Language Model", "type": "source", "category": "sources", "path": "wiki/sources/emotion-concepts-anthropic-2026.md"}, {"id": "generating-wikipedia-by-summarizing-long-sequences", "title": "Generating Wikipedia by Summarizing Long Sequences", "type": "source", "category": "sources", "path": "wiki/sources/generating-wikipedia-by-summarizing-long-sequences.md"}, {"id": "gpt-4-technical-report", "title": "GPT-4 Technical Report", "type": "source", "category": "sources", "path": "wiki/sources/gpt-4-technical-report.md"}, {"id": "improving-language-models-by-retrieving-from-trillions-of-tokens", "title": "Improving language models by retrieving from trillions of tokens", "type": "source", "category": "sources", "path": "wiki/sources/improving-language-models-by-retrieving-from-trillions-of-tokens.md"}, {"id": "improving-language-understanding-by-generative-pre-training", "title": "Improving Language Understanding by Generative Pre-Training", "type": "source", "category": "sources", "path": "wiki/sources/improving-language-understanding-by-generative-pre-training.md"}, {"id": "language-models-are-few-shot-learners", "title": "Language Models are Few-Shot Learners", "type": "source", "category": "sources", "path": "wiki/sources/language-models-are-few-shot-learners.md"}, {"id": "language-models-are-unsupervised-multitask-learners", "title": "Language Models are Unsupervised Multitask Learners", "type": "source", "category": "sources", "path": "wiki/sources/language-models-are-unsupervised-multitask-learners.md"}, {"id": "react-synergizing-reasoning-and-acting", "title": "ReAct: Synergizing Reasoning and Acting in Language Models", "type": "source", "category": "sources", "path": "wiki/sources/react-synergizing-reasoning-and-acting.md"}, {"id": "reflexion-verbal-reinforcement-learning", "title": "Reflexion: Language Agents with Verbal Reinforcement Learning", "type": "source", "category": "sources", "path": "wiki/sources/reflexion-verbal-reinforcement-learning.md"}, {"id": "retrieval-augmented-generation-for-knowledge-intensive-nlp-tasks", "title": "Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks", "type": "source", "category": "sources", "path": "wiki/sources/retrieval-augmented-generation-for-knowledge-intensive-nlp-tasks.md"}, {"id": "gpt-series-upgrade-points", "title": "GPT Series: Upgrade Points", "type": "comparison", "category": "comparisons", "path": "wiki/comparisons/gpt-series-upgrade-points.md"}, {"id": "long-term-memory-benchmarks", "title": "Long-Term Memory Benchmarks for LLM Agents", "type": "comparison", "category": "comparisons", "path": "wiki/comparisons/long-term-memory-benchmarks.md"}, {"id": "memory-skill-evaluation-plan", "title": "Evaluation Plan: Agent Memory Skill", "type": "comparison", "category": "comparisons", "path": "wiki/comparisons/memory-skill-evaluation-plan.md"}], "edges": [{"source": "anthropic", "target": "claude-sonnet"}, {"source": "anthropic", "target": "emotion-concepts-anthropic-2026"}, {"source": "anthropic", "target": "emotion-vectors"}, {"source": "anthropic", "target": "chris-olah"}, {"source": "bert", "target": "transformer-architecture"}, {"source": "bert", "target": "masked-language-modeling"}, {"source": "bert", "target": "attention-is-all-you-need"}, {"source": "bert", "target": "gpt-1"}, {"source": "bert", "target": "bert-pre-training-of-deep-bidirectional-transformers"}, {"source": "chris-olah", "target": "anthropic"}, {"source": "chris-olah", "target": "emotion-concepts-anthropic-2026"}, {"source": "chris-olah", "target": "functional-emotions"}, {"source": "chris-olah", "target": "claude-sonnet"}, {"source": "claude-sonnet", "target": "anthropic"}, {"source": "claude-sonnet", "target": "emotion-concepts-anthropic-2026"}, {"source": "claude-sonnet", "target": "emotion-vectors"}, {"source": "claude-sonnet", "target": "activation-steering"}, {"source": "claude-sonnet", "target": "reward-hacking"}, {"source": "gpt-1", "target": "generative-pretraining"}, {"source": "gpt-1", "target": "gpt-2"}, {"source": "gpt-1", "target": "gpt-3"}, {"source": "gpt-1", "target": "decoder-only-transformer"}, {"source": "gpt-1", "target": "bert"}, {"source": "gpt-1", "target": "masked-language-modeling"}, {"source": "gpt-1", "target": "transformer-architecture"}, {"source": "gpt-1", "target": "improving-language-understanding-by-generative-pre-training"}, {"source": "gpt-2", "target": "gpt-1"}, {"source": "gpt-2", "target": "decoder-only-transformer"}, {"source": "gpt-2", "target": "bert"}, {"source": "gpt-2", "target": "gpt-3"}, {"source": "gpt-2", "target": "language-models-are-unsupervised-multitask-learners"}, {"source": "gpt-2", "target": "generative-pretraining"}, {"source": "gpt-3", "target": "in-context-learning"}, {"source": "gpt-3", "target": "decoder-only-transformer"}, {"source": "gpt-3", "target": "gpt-2"}, {"source": "gpt-3", "target": "generative-pretraining"}, {"source": "gpt-3", "target": "gpt-1"}, {"source": "gpt-3", "target": "bert"}, {"source": "gpt-3", "target": "language-models-are-few-shot-learners"}, {"source": "gpt-4", "target": "gpt-3"}, {"source": "gpt-4", "target": "generative-pretraining"}, {"source": "gpt-4", "target": "in-context-learning"}, {"source": "gpt-4", "target": "gpt-4-technical-report"}, {"source": "jason-wei", "target": "chain-of-thought-prompting"}, {"source": "jason-wei", "target": "chain-of-thought-prompting-wei-2022"}, {"source": "noah-shinn", "target": "reflexion"}, {"source": "noah-shinn", "target": "shunyu-yao"}, {"source": "noah-shinn", "target": "reflexion-verbal-reinforcement-learning"}, {"source": "palm", "target": "transformer-architecture"}, {"source": "palm", "target": "chain-of-thought-prompting"}, {"source": "palm", "target": "react"}, {"source": "palm", "target": "chain-of-thought-prompting-wei-2022"}, {"source": "palm", "target": "react-synergizing-reasoning-and-acting"}, {"source": "retro", "target": "transformer-architecture"}, {"source": "retro", "target": "retrieval-augmented-generation"}, {"source": "retro", "target": "dense-passage-retrieval"}, {"source": "retro", "target": "gpt-3"}, {"source": "retro", "target": "improving-language-models-by-retrieving-from-trillions-of-tokens"}, {"source": "shunyu-yao", "target": "react"}, {"source": "shunyu-yao", "target": "reflexion"}, {"source": "shunyu-yao", "target": "noah-shinn"}, {"source": "shunyu-yao", "target": "react-synergizing-reasoning-and-acting"}, {"source": "shunyu-yao", "target": "reflexion-verbal-reinforcement-learning"}, {"source": "vision-transformer", "target": "transformer-architecture"}, {"source": "vision-transformer", "target": "bert"}, {"source": "vision-transformer", "target": "an-image-is-worth-16x16-words-transformers-for-image-recognition-at-scale"}, {"source": "activation-steering", "target": "emotion-vectors"}, {"source": "activation-steering", "target": "emotion-concepts-anthropic-2026"}, {"source": "activation-steering", "target": "claude-sonnet"}, {"source": "activation-steering", "target": "transformer-architecture"}, {"source": "activation-steering", "target": "functional-emotions"}, {"source": "agentic-ai", "target": "chain-of-thought-prompting"}, {"source": "agentic-ai", "target": "react"}, {"source": "agentic-ai", "target": "reflexion"}, {"source": "agentic-ai", "target": "agentic-ai-and-the-next-intelligence-explosion"}, {"source": "agentic-ai", "target": "society-of-thought"}, {"source": "agentic-ai", "target": "tool-use-in-llms"}, {"source": "agentic-ai", "target": "react-synergizing-reasoning-and-acting"}, {"source": "agentic-ai", "target": "reflexion-verbal-reinforcement-learning"}, {"source": "agentic-misalignment", "target": "emotion-concepts-anthropic-2026"}, {"source": "agentic-misalignment", "target": "functional-emotions"}, {"source": "agentic-misalignment", "target": "agentic-ai"}, {"source": "agentic-misalignment", "target": "reward-hacking"}, {"source": "chain-of-thought-prompting", "target": "jason-wei"}, {"source": "chain-of-thought-prompting", "target": "react-synergizing-reasoning-and-acting"}, {"source": "chain-of-thought-prompting", "target": "react"}, {"source": "chain-of-thought-prompting", "target": "reflexion"}, {"source": "chain-of-thought-prompting", "target": "chain-of-thought-prompting-wei-2022"}, {"source": "chain-of-thought-prompting", "target": "reflexion-verbal-reinforcement-learning"}, {"source": "decoder-only-transformer", "target": "transformer-architecture"}, {"source": "decoder-only-transformer", "target": "generating-wikipedia-by-summarizing-long-sequences"}, {"source": "decoder-only-transformer", "target": "in-context-learning"}, {"source": "decoder-only-transformer", "target": "gpt-1"}, {"source": "decoder-only-transformer", "target": "gpt-2"}, {"source": "decoder-only-transformer", "target": "gpt-3"}, {"source": "decoder-only-transformer", "target": "generative-pretraining"}, {"source": "decoder-only-transformer", "target": "improving-language-understanding-by-generative-pre-training"}, {"source": "decoder-only-transformer", "target": "language-models-are-unsupervised-multitask-learners"}, {"source": "decoder-only-transformer", "target": "language-models-are-few-shot-learners"}, {"source": "dense-passage-retrieval", "target": "retrieval-augmented-generation"}, {"source": "dense-passage-retrieval", "target": "transformer-architecture"}, {"source": "dense-passage-retrieval", "target": "dense-passage-retrieval-for-open-domain-question-answering"}, {"source": "emotion-vectors", "target": "claude-sonnet"}, {"source": "emotion-vectors", "target": "functional-emotions"}, {"source": "emotion-vectors", "target": "activation-steering"}, {"source": "emotion-vectors", "target": "emotion-concepts-anthropic-2026"}, {"source": "functional-emotions", "target": "emotion-vectors"}, {"source": "functional-emotions", "target": "emotion-concepts-anthropic-2026"}, {"source": "functional-emotions", "target": "claude-sonnet"}, {"source": "functional-emotions", "target": "transformer-architecture"}, {"source": "functional-emotions", "target": "self-attention"}, {"source": "functional-emotions", "target": "activation-steering"}, {"source": "functional-emotions", "target": "sycophancy"}, {"source": "functional-emotions", "target": "reward-hacking"}, {"source": "functional-emotions", "target": "agentic-misalignment"}, {"source": "generative-pretraining", "target": "gpt-1"}, {"source": "generative-pretraining", "target": "decoder-only-transformer"}, {"source": "generative-pretraining", "target": "transformer-architecture"}, {"source": "generative-pretraining", "target": "gpt-2"}, {"source": "generative-pretraining", "target": "gpt-3"}, {"source": "generative-pretraining", "target": "in-context-learning"}, {"source": "generative-pretraining", "target": "bert"}, {"source": "generative-pretraining", "target": "masked-language-modeling"}, {"source": "generative-pretraining", "target": "improving-language-understanding-by-generative-pre-training"}, {"source": "in-context-learning", "target": "gpt-3"}, {"source": "in-context-learning", "target": "gpt-2"}, {"source": "in-context-learning", "target": "generative-pretraining"}, {"source": "in-context-learning", "target": "language-models-are-few-shot-learners"}, {"source": "masked-language-modeling", "target": "bert"}, {"source": "masked-language-modeling", "target": "transformer-architecture"}, {"source": "masked-language-modeling", "target": "bert-pre-training-of-deep-bidirectional-transformers"}, {"source": "react", "target": "shunyu-yao"}, {"source": "react", "target": "tool-use-in-llms"}, {"source": "react", "target": "chain-of-thought-prompting"}, {"source": "react", "target": "reflexion"}, {"source": "react", "target": "react-synergizing-reasoning-and-acting"}, {"source": "react", "target": "reflexion-verbal-reinforcement-learning"}, {"source": "reflexion", "target": "noah-shinn"}, {"source": "reflexion", "target": "react"}, {"source": "reflexion", "target": "chain-of-thought-prompting"}, {"source": "reflexion", "target": "agentic-ai"}, {"source": "reflexion", "target": "agentic-ai-and-the-next-intelligence-explosion"}, {"source": "reflexion", "target": "reflexion-verbal-reinforcement-learning"}, {"source": "reflexion", "target": "react-synergizing-reasoning-and-acting"}, {"source": "retrieval-augmented-generation", "target": "dense-passage-retrieval"}, {"source": "retrieval-augmented-generation", "target": "retro"}, {"source": "retrieval-augmented-generation", "target": "generative-pretraining"}, {"source": "retrieval-augmented-generation", "target": "transformer-architecture"}, {"source": "retrieval-augmented-generation", "target": "retrieval-augmented-generation-for-knowledge-intensive-nlp-tasks"}, {"source": "reward-hacking", "target": "emotion-concepts-anthropic-2026"}, {"source": "reward-hacking", "target": "claude-sonnet"}, {"source": "reward-hacking", "target": "functional-emotions"}, {"source": "reward-hacking", "target": "activation-steering"}, {"source": "reward-hacking", "target": "agentic-misalignment"}, {"source": "self-attention", "target": "transformer-architecture"}, {"source": "self-attention", "target": "functional-emotions"}, {"source": "self-attention", "target": "activation-steering"}, {"source": "self-attention", "target": "attention-is-all-you-need"}, {"source": "society-of-thought", "target": "agentic-ai-and-the-next-intelligence-explosion"}, {"source": "society-of-thought", "target": "agentic-ai"}, {"source": "society-of-thought", "target": "chain-of-thought-prompting"}, {"source": "society-of-thought", "target": "react"}, {"source": "society-of-thought", "target": "reflexion"}, {"source": "sycophancy", "target": "emotion-concepts-anthropic-2026"}, {"source": "sycophancy", "target": "emotion-vectors"}, {"source": "sycophancy", "target": "claude-sonnet"}, {"source": "sycophancy", "target": "functional-emotions"}, {"source": "sycophancy", "target": "activation-steering"}, {"source": "tool-use-in-llms", "target": "agentic-ai"}, {"source": "tool-use-in-llms", "target": "react"}, {"source": "tool-use-in-llms", "target": "reflexion"}, {"source": "tool-use-in-llms", "target": "agentic-ai-and-the-next-intelligence-explosion"}, {"source": "tool-use-in-llms", "target": "react-synergizing-reasoning-and-acting"}, {"source": "tool-use-in-llms", "target": "reflexion-verbal-reinforcement-learning"}, {"source": "transformer-architecture", "target": "self-attention"}, {"source": "transformer-architecture", "target": "palm"}, {"source": "transformer-architecture", "target": "vision-transformer"}, {"source": "transformer-architecture", "target": "activation-steering"}, {"source": "transformer-architecture", "target": "attention-is-all-you-need"}, {"source": "agentic-ai-and-the-next-intelligence-explosion", "target": "society-of-thought"}, {"source": "agentic-ai-and-the-next-intelligence-explosion", "target": "agentic-ai"}, {"source": "agentic-ai-and-the-next-intelligence-explosion", "target": "react"}, {"source": "agentic-ai-and-the-next-intelligence-explosion", "target": "reflexion"}, {"source": "agentic-ai-and-the-next-intelligence-explosion", "target": "tool-use-in-llms"}, {"source": "an-image-is-worth-16x16-words-transformers-for-image-recognition-at-scale", "target": "vision-transformer"}, {"source": "an-image-is-worth-16x16-words-transformers-for-image-recognition-at-scale", "target": "transformer-architecture"}, {"source": "attention-is-all-you-need", "target": "transformer-architecture"}, {"source": "attention-is-all-you-need", "target": "self-attention"}, {"source": "attention-is-all-you-need", "target": "palm"}, {"source": "bert-pre-training-of-deep-bidirectional-transformers", "target": "bert"}, {"source": "bert-pre-training-of-deep-bidirectional-transformers", "target": "masked-language-modeling"}, {"source": "bert-pre-training-of-deep-bidirectional-transformers", "target": "transformer-architecture"}, {"source": "chain-of-thought-prompting-wei-2022", "target": "jason-wei"}, {"source": "chain-of-thought-prompting-wei-2022", "target": "chain-of-thought-prompting"}, {"source": "chain-of-thought-prompting-wei-2022", "target": "palm"}, {"source": "dense-passage-retrieval-for-open-domain-question-answering", "target": "dense-passage-retrieval"}, {"source": "dense-passage-retrieval-for-open-domain-question-answering", "target": "transformer-architecture"}, {"source": "emotion-concepts-anthropic-2026", "target": "anthropic"}, {"source": "emotion-concepts-anthropic-2026", "target": "claude-sonnet"}, {"source": "emotion-concepts-anthropic-2026", "target": "functional-emotions"}, {"source": "emotion-concepts-anthropic-2026", "target": "emotion-vectors"}, {"source": "emotion-concepts-anthropic-2026", "target": "activation-steering"}, {"source": "emotion-concepts-anthropic-2026", "target": "chris-olah"}, {"source": "emotion-concepts-anthropic-2026", "target": "chain-of-thought-prompting"}, {"source": "emotion-concepts-anthropic-2026", "target": "sycophancy"}, {"source": "emotion-concepts-anthropic-2026", "target": "reward-hacking"}, {"source": "emotion-concepts-anthropic-2026", "target": "agentic-misalignment"}, {"source": "generating-wikipedia-by-summarizing-long-sequences", "target": "decoder-only-transformer"}, {"source": "generating-wikipedia-by-summarizing-long-sequences", "target": "transformer-architecture"}, {"source": "gpt-4-technical-report", "target": "gpt-4"}, {"source": "gpt-4-technical-report", "target": "in-context-learning"}, {"source": "gpt-4-technical-report", "target": "generative-pretraining"}, {"source": "improving-language-models-by-retrieving-from-trillions-of-tokens", "target": "retro"}, {"source": "improving-language-models-by-retrieving-from-trillions-of-tokens", "target": "retrieval-augmented-generation"}, {"source": "improving-language-models-by-retrieving-from-trillions-of-tokens", "target": "transformer-architecture"}, {"source": "improving-language-understanding-by-generative-pre-training", "target": "gpt-1"}, {"source": "improving-language-understanding-by-generative-pre-training", "target": "generative-pretraining"}, {"source": "improving-language-understanding-by-generative-pre-training", "target": "transformer-architecture"}, {"source": "language-models-are-few-shot-learners", "target": "gpt-3"}, {"source": "language-models-are-few-shot-learners", "target": "in-context-learning"}, {"source": "language-models-are-few-shot-learners", "target": "generative-pretraining"}, {"source": "language-models-are-unsupervised-multitask-learners", "target": "gpt-2"}, {"source": "language-models-are-unsupervised-multitask-learners", "target": "gpt-1"}, {"source": "language-models-are-unsupervised-multitask-learners", "target": "generative-pretraining"}, {"source": "language-models-are-unsupervised-multitask-learners", "target": "transformer-architecture"}, {"source": "react-synergizing-reasoning-and-acting", "target": "shunyu-yao"}, {"source": "react-synergizing-reasoning-and-acting", "target": "react"}, {"source": "react-synergizing-reasoning-and-acting", "target": "palm"}, {"source": "react-synergizing-reasoning-and-acting", "target": "chain-of-thought-prompting"}, {"source": "react-synergizing-reasoning-and-acting", "target": "tool-use-in-llms"}, {"source": "reflexion-verbal-reinforcement-learning", "target": "noah-shinn"}, {"source": "reflexion-verbal-reinforcement-learning", "target": "shunyu-yao"}, {"source": "reflexion-verbal-reinforcement-learning", "target": "reflexion"}, {"source": "reflexion-verbal-reinforcement-learning", "target": "chain-of-thought-prompting"}, {"source": "reflexion-verbal-reinforcement-learning", "target": "react"}, {"source": "reflexion-verbal-reinforcement-learning", "target": "tool-use-in-llms"}, {"source": "retrieval-augmented-generation-for-knowledge-intensive-nlp-tasks", "target": "retrieval-augmented-generation"}, {"source": "retrieval-augmented-generation-for-knowledge-intensive-nlp-tasks", "target": "dense-passage-retrieval"}, {"source": "retrieval-augmented-generation-for-knowledge-intensive-nlp-tasks", "target": "transformer-architecture"}, {"source": "gpt-series-upgrade-points", "target": "decoder-only-transformer"}, {"source": "gpt-series-upgrade-points", "target": "generative-pretraining"}, {"source": "gpt-series-upgrade-points", "target": "gpt-1"}, {"source": "gpt-series-upgrade-points", "target": "gpt-2"}, {"source": "gpt-series-upgrade-points", "target": "gpt-3"}, {"source": "gpt-series-upgrade-points", "target": "gpt-4"}, {"source": "gpt-series-upgrade-points", "target": "in-context-learning"}, {"source": "gpt-series-upgrade-points", "target": "improving-language-understanding-by-generative-pre-training"}, {"source": "gpt-series-upgrade-points", "target": "language-models-are-unsupervised-multitask-learners"}, {"source": "gpt-series-upgrade-points", "target": "language-models-are-few-shot-learners"}, {"source": "gpt-series-upgrade-points", "target": "gpt-4-technical-report"}, {"source": "memory-skill-evaluation-plan", "target": "long-term-memory-benchmarks"}], "missing": {}};
+
+  const TYPE_COLORS = {
+    entity: "#5b8def",
+    concept: "#7bc97e",
+    source: "#f0b35e",
+    comparison: "#d672c9",
+    query: "#888888",
+    unknown: "#bbbbbb",
+  };
+
+  const svg = d3.select("svg");
+  const width = window.innerWidth;
+  const height = window.innerHeight;
+
+  const g = svg.append("g");
+
+  svg.call(d3.zoom().scaleExtent([0.2, 4]).on("zoom", (event) => {
+    g.attr("transform", event.transform);
+  }));
+
+  const simulation = d3.forceSimulation(DATA.nodes)
+    .force("link", d3.forceLink(DATA.edges).id(d => d.id).distance(80).strength(0.6))
+    .force("charge", d3.forceManyBody().strength(-180))
+    .force("center", d3.forceCenter(width / 2, height / 2))
+    .force("collide", d3.forceCollide().radius(20));
+
+  const link = g.append("g").selectAll("line")
+    .data(DATA.edges).enter().append("line")
+    .attr("class", "link");
+
+  const node = g.append("g").selectAll("g")
+    .data(DATA.nodes).enter().append("g")
+    .attr("class", "node");
+
+  node.append("circle")
+    .attr("r", d => 4 + Math.sqrt(degree(d.id)) * 2)
+    .attr("fill", d => TYPE_COLORS[d.type] || TYPE_COLORS.unknown)
+    .on("mouseover", (event, d) => highlight(d))
+    .on("mouseout", () => unhighlight())
+    .on("click", (event, d) => showInfo(d));
+
+  node.append("text")
+    .attr("dx", 10).attr("dy", 4)
+    .text(d => d.title);
+
+  node.call(d3.drag()
+    .on("start", (event, d) => { if (!event.active) simulation.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; })
+    .on("drag", (event, d) => { d.fx = event.x; d.fy = event.y; })
+    .on("end", (event, d) => { if (!event.active) simulation.alphaTarget(0); d.fx = null; d.fy = null; }));
+
+  simulation.on("tick", () => {
+    link.attr("x1", d => d.source.x).attr("y1", d => d.source.y)
+        .attr("x2", d => d.target.x).attr("y2", d => d.target.y);
+    node.attr("transform", d => `translate(${d.x},${d.y})`);
+  });
+
+  function degree(id) {
+    return DATA.edges.filter(e => (e.source.id || e.source) === id || (e.target.id || e.target) === id).length;
+  }
+
+  function highlight(d) {
+    const neighbors = new Set([d.id]);
+    DATA.edges.forEach(e => {
+      const s = e.source.id || e.source, t = e.target.id || e.target;
+      if (s === d.id) neighbors.add(t);
+      if (t === d.id) neighbors.add(s);
+    });
+    node.classed("dimmed", n => !neighbors.has(n.id));
+    link.classed("dimmed", e => {
+      const s = e.source.id || e.source, t = e.target.id || e.target;
+      return !(s === d.id || t === d.id);
+    });
+    link.classed("highlighted", e => {
+      const s = e.source.id || e.source, t = e.target.id || e.target;
+      return s === d.id || t === d.id;
+    });
+  }
+
+  function unhighlight() {
+    node.classed("dimmed", false);
+    link.classed("dimmed", false).classed("highlighted", false);
+  }
+
+  function showInfo(d) {
+    const inDeg = DATA.edges.filter(e => (e.target.id || e.target) === d.id).length;
+    const outDeg = DATA.edges.filter(e => (e.source.id || e.source) === d.id).length;
+    const info = document.getElementById("info");
+    info.style.display = "block";
+    info.innerHTML = `
+      <h3>${d.title}</h3>
+      <div class="meta">type: ${d.type} · category: ${d.category}</div>
+      <div class="meta">in: ${inDeg} · out: ${outDeg}</div>
+      <div style="margin-top:8px"><a href="./${d.path}" target="_blank">${d.path}</a></div>
+    `;
+  }
+
+  // Type filter legend
+  const types = [...new Set(DATA.nodes.map(n => n.type))].sort();
+  const enabled = new Set(types);
+  const legendEl = document.getElementById("legend");
+  types.forEach(t => {
+    const counts = DATA.nodes.filter(n => n.type === t).length;
+    const div = document.createElement("div");
+    div.className = "legend-item";
+    div.innerHTML = `<div class="swatch" style="background:${TYPE_COLORS[t] || TYPE_COLORS.unknown}"></div><span>${t} (${counts})</span>`;
+    div.onclick = () => {
+      if (enabled.has(t)) { enabled.delete(t); div.classList.add("disabled"); }
+      else { enabled.add(t); div.classList.remove("disabled"); }
+      applyFilters();
+    };
+    legendEl.appendChild(div);
+  });
+
+  // Search
+  document.getElementById("search").addEventListener("input", () => applyFilters());
+
+  function applyFilters() {
+    const q = document.getElementById("search").value.toLowerCase();
+    node.style("display", d => {
+      if (!enabled.has(d.type)) return "none";
+      if (q && !d.title.toLowerCase().includes(q) && !d.id.includes(q)) return "none";
+      return null;
+    });
+    const visible = new Set(DATA.nodes.filter(d => enabled.has(d.type) && (!q || d.title.toLowerCase().includes(q) || d.id.includes(q))).map(d => d.id));
+    link.style("display", e => {
+      const s = e.source.id || e.source, t = e.target.id || e.target;
+      return visible.has(s) && visible.has(t) ? null : "none";
+    });
+  }
+
+  document.getElementById("stats").textContent =
+    `${DATA.nodes.length} nodes · ${DATA.edges.length} edges` +
+    (Object.keys(DATA.missing).length ? ` · ${Object.keys(DATA.missing).length} missing pages referenced` : "");
+  </script>
+</body>
+</html>
