@@ -77,7 +77,8 @@ sources:
   - source-filename.md
 tags:
   - tag1
-  - tag2
+status: draft | complete | needs-update
+importance: high | medium | low
 ---
 
 # Page Title
@@ -88,6 +89,35 @@ Content body with [[wikilinks]] to other wiki pages.
 
 - [[source-summary-page]]
 ```
+
+**Field semantics:**
+- `title` (required): human-readable page title
+- `type` (required): one of `entity`, `concept`, `source`, `comparison`, `query`
+- `created`, `updated` (required): `YYYY-MM-DD`
+- `sources` (required for all except `overview`/`index`): list of source filenames that contributed
+- `tags` (optional, ≤3): see Tag Policy
+- `status` (required): `draft` (early stub, single source or limited info), `complete` (substantial coverage), `needs-update` (known stale)
+- `importance` (required): `high`, `medium`, `low` — used for filtering/sorting in Dataview-style queries
+
+### Obsidian / Dataview Integration
+
+The frontmatter is structured so the [Dataview](https://blacksmithgu.github.io/obsidian-dataview/) Obsidian plugin can run live queries over the wiki. Example queries the user can paste into Obsidian notes:
+
+```dataview
+TABLE tags, updated, importance
+FROM "wiki/concepts"
+WHERE status = "complete"
+SORT importance ASC
+```
+
+```dataview
+LIST
+FROM "wiki/entities"
+WHERE contains(tags, "<some-tag>")
+SORT updated DESC
+```
+
+This is purely additive — Dataview is not required for the skill to function, but maintaining the frontmatter shape preserves the option.
 
 ### Wikilinks
 

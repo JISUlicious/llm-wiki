@@ -1,4 +1,6 @@
-# LLM Wiki Schema
+# AI/ML Wiki — Project Schema
+
+This file is project-specific guidance for the wiki. It defines what this wiki covers and any domain conventions. Skill mechanics (directory layout, frontmatter shape, ingest steps, link format, etc.) live in `.claude/skills/wiki/SKILL.md`.
 
 ## Domain
 
@@ -11,80 +13,20 @@ This wiki covers **Artificial Intelligence and Machine Learning** — models, ar
 - **Books & transcripts**: Book chapters, podcast transcripts, lecture notes, interview transcripts. Extract key arguments, notable quotes, and speaker attributions.
 - **Mixed**: Any other format — treat as general markdown and extract what's valuable.
 
-## Page Types
+## Domain-Specific Page Guidance
 
-### Entities
-Pages for distinct things: researchers, labs, companies, models, datasets, benchmarks, conferences.
-- Directory: `wiki/entities/`
-- Naming: `kebab-case-name.md`
-- For AI models: include parameter count, training data, release date, key capabilities
-- For researchers: include affiliation, key contributions, notable papers
-- For labs/companies: include focus area, notable releases, key personnel
+Augments the skill's generic page-type definitions:
 
-### Concepts
-Pages for ideas, techniques, architectures, training methods, theoretical frameworks.
-- Directory: `wiki/concepts/`
-- Naming: `kebab-case-name.md`
-- Include: intuition/explanation, mathematical formulation (if applicable), history, key papers, relationship to other concepts
-- Examples: attention mechanism, RLHF, mixture of experts, scaling laws, chain-of-thought
+- **AI models** (entity pages): include parameter count, training data, release date, key capabilities.
+- **Researchers** (entity pages): include affiliation, key contributions, notable papers.
+- **Labs / companies** (entity pages): include focus area, notable releases, key personnel.
+- **Concepts**: include intuition/explanation, mathematical formulation (if applicable), history, key papers, relationship to other concepts. Examples in this domain: attention mechanism, RLHF, mixture of experts, scaling laws, chain-of-thought.
 
-### Source Summaries
-One page per ingested source document. Captures key claims, data, and takeaways.
-- Directory: `wiki/sources/`
-- Naming: `kebab-case-short-title.md`
+## Domain Conventions
 
-### Comparisons
-Side-by-side analyses, comparison tables, tradeoff discussions.
-- Directory: `wiki/comparisons/`
-- Naming: `kebab-case-comparison-title.md`
-- Use markdown tables for structured comparisons (e.g., model benchmarks)
-
-### Queries
-Filed answers to questions asked against the wiki.
-- Directory: `wiki/queries/`
-- Naming: `kebab-case-question-slug.md`
-
-## Conventions
-
-- All wiki pages use YAML frontmatter with: title, type, created, updated, sources, tags
-- Use `[[wikilinks]]` for internal links (Obsidian-compatible)
-- File names are kebab-case, no spaces
-- Dates use YYYY-MM-DD format
-- When new information contradicts existing content, use `> [!warning] Contradiction` callouts
-- Use LaTeX notation (`$...$`) for inline math, (`$$...$$`) for display math when describing formulas
-- When referencing papers, use format: "Author et al. (Year)" with a link to the source summary page
-
-## Frontmatter Schema
-
-```yaml
-title: string (required)
-type: entity | concept | source | comparison | query (required)
-created: YYYY-MM-DD (required)
-updated: YYYY-MM-DD (required)
-sources: list of source filenames (required for all except overview/index)
-tags: list of strings (required — for Dataview queries)
-status: draft | complete | needs-update (for Dataview filtering)
-importance: high | medium | low (for Dataview sorting)
-```
-
-### Dataview Examples
-
-With this frontmatter, you can run Dataview queries in Obsidian like:
-
-```dataview
-TABLE tags, updated, importance
-FROM "wiki/concepts"
-WHERE status = "complete"
-SORT importance ASC
-```
-
-```dataview
-LIST
-FROM "wiki/entities"
-WHERE contains(tags, "model")
-SORT updated DESC
-```
+- Use LaTeX notation (`$...$`) for inline math, (`$$...$$`) for display math when describing formulas.
+- When referencing papers, use the format: "Author et al. (Year)" with a link to the source summary page.
 
 ## Maintenance Notes
 
-This file is co-evolved between you and the LLM. As you work with the wiki, update this schema to reflect new conventions, page types, or workflows that emerge.
+This file is co-evolved between you and the LLM. As you work with the wiki, update this schema to reflect new domain conventions, important entity types, or workflows that emerge. Skill-level mechanics (link format, frontmatter shape, directory layout) belong in `.claude/skills/wiki/`, not here.
