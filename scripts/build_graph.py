@@ -49,6 +49,7 @@ def parse_page(path: Path) -> dict:
         "category": path.parent.name,
         "links": links,
         "path": str(path.relative_to(WIKI_DIR.parent)),
+        "body": body.lstrip("\n"),
     }
 
 
@@ -68,6 +69,7 @@ def build_graph():
         "type": p["type"],
         "category": p["category"],
         "path": p["path"],
+        "body": p["body"],
     } for p in pages]
 
     edges = []
@@ -93,6 +95,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   <meta charset="UTF-8">
   <title>Wiki Graph</title>
   <script src="https://d3js.org/d3.v7.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <style>
     html, body { margin: 0; padding: 0; height: 100%; font-family: -apple-system, system-ui, sans-serif; background: #fafafa; }
     #toolbar { position: fixed; top: 12px; left: 12px; z-index: 10; background: rgba(255,255,255,0.95); border: 1px solid #ddd; border-radius: 6px; padding: 10px 14px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); font-size: 13px; max-width: 280px; }
@@ -103,11 +106,30 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     #toolbar .swatch { width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; }
     #toolbar .stats { margin-top: 10px; padding-top: 10px; border-top: 1px solid #eee; color: #666; font-size: 12px; }
     #toolbar input[type=text] { width: 100%; padding: 4px 6px; margin-top: 4px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; font-size: 12px; }
-    #info { position: fixed; bottom: 12px; right: 12px; z-index: 10; background: rgba(255,255,255,0.95); border: 1px solid #ddd; border-radius: 6px; padding: 10px 14px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); font-size: 13px; max-width: 320px; display: none; }
-    #info h3 { margin: 0 0 6px 0; font-size: 14px; }
-    #info .meta { color: #888; font-size: 12px; }
-    #info a { color: #0366d6; text-decoration: none; }
-    #info a:hover { text-decoration: underline; }
+    #panel { position: fixed; top: 0; right: 0; width: 420px; height: 100vh; z-index: 20; background: #fff; border-left: 1px solid #ddd; box-shadow: -2px 0 12px rgba(0,0,0,0.08); display: none; flex-direction: column; }
+    #panel.open { display: flex; }
+    #panel-header { padding: 14px 18px 10px 18px; border-bottom: 1px solid #eee; flex-shrink: 0; }
+    #panel-header h2 { margin: 0; font-size: 16px; line-height: 1.3; padding-right: 28px; }
+    #panel-header .meta { color: #888; font-size: 12px; margin-top: 4px; }
+    #panel-header a { color: #0366d6; text-decoration: none; }
+    #panel-header a:hover { text-decoration: underline; }
+    #panel-close { position: absolute; top: 10px; right: 12px; cursor: pointer; background: none; border: none; font-size: 18px; color: #888; line-height: 1; padding: 4px 6px; }
+    #panel-close:hover { color: #333; }
+    #panel-body { padding: 14px 18px 30px 18px; overflow-y: auto; flex: 1; font-size: 14px; line-height: 1.55; color: #2a2a2a; }
+    #panel-body h1 { font-size: 18px; margin-top: 18px; }
+    #panel-body h2 { font-size: 16px; margin-top: 16px; border-bottom: 1px solid #eee; padding-bottom: 4px; }
+    #panel-body h3 { font-size: 14px; margin-top: 14px; }
+    #panel-body code { background: #f4f4f4; padding: 1px 5px; border-radius: 3px; font-size: 12.5px; }
+    #panel-body pre { background: #f4f4f4; padding: 10px; border-radius: 4px; overflow-x: auto; }
+    #panel-body pre code { background: transparent; padding: 0; }
+    #panel-body blockquote { border-left: 3px solid #ddd; margin-left: 0; padding-left: 12px; color: #666; }
+    #panel-body table { border-collapse: collapse; font-size: 13px; }
+    #panel-body th, #panel-body td { border: 1px solid #ddd; padding: 4px 8px; }
+    #panel-body img { max-width: 100%; }
+    .wikilink { color: #0366d6; cursor: pointer; text-decoration: none; border-bottom: 1px dashed #b8d4ff; }
+    .wikilink:hover { background: #eaf3ff; }
+    .wikilink.broken { color: #999; cursor: not-allowed; border-bottom-style: dotted; }
+    .wikilink.broken:hover { background: transparent; }
     svg { width: 100vw; height: 100vh; display: block; }
     .node circle { stroke: #fff; stroke-width: 1.5px; cursor: pointer; }
     .node text { font-size: 11px; pointer-events: none; fill: #333; }
@@ -125,7 +147,14 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     <div class="legend" id="legend"></div>
     <div class="stats" id="stats"></div>
   </div>
-  <div id="info"></div>
+  <div id="panel">
+    <div id="panel-header">
+      <button id="panel-close" title="Close">×</button>
+      <h2 id="panel-title"></h2>
+      <div class="meta" id="panel-meta"></div>
+    </div>
+    <div id="panel-body"></div>
+  </div>
   <svg></svg>
 
   <script>
@@ -213,18 +242,54 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     link.classed("dimmed", false).classed("highlighted", false);
   }
 
+  const NODE_BY_ID = Object.fromEntries(DATA.nodes.map(n => [n.id, n]));
+
+  function slugLink(s) {
+    // Match Python's slug() behavior for wikilink targets
+    return s.split(/[\\/]/).pop().replace(/\.md$/i, "").toLowerCase();
+  }
+
+  function rewriteWikilinks(md) {
+    // Replace [[target]] or [[target|label]] with anchor tags that route to nodes
+    return md.replace(/\[\[([^\]|#]+?)(?:#[^\]|]*)?(?:\|([^\]]+))?\]\]/g, (match, target, label) => {
+      const id = slugLink(target.trim());
+      const display = (label || target).trim();
+      if (NODE_BY_ID[id]) {
+        return `<a class="wikilink" data-target="${id}">${display}</a>`;
+      }
+      return `<span class="wikilink broken" title="page not yet created">${display}</span>`;
+    });
+  }
+
   function showInfo(d) {
     const inDeg = DATA.edges.filter(e => (e.target.id || e.target) === d.id).length;
     const outDeg = DATA.edges.filter(e => (e.source.id || e.source) === d.id).length;
-    const info = document.getElementById("info");
-    info.style.display = "block";
-    info.innerHTML = `
-      <h3>${d.title}</h3>
-      <div class="meta">type: ${d.type} · category: ${d.category}</div>
-      <div class="meta">in: ${inDeg} · out: ${outDeg}</div>
-      <div style="margin-top:8px"><a href="./${d.path}" target="_blank">${d.path}</a></div>
-    `;
+    const panel = document.getElementById("panel");
+    document.getElementById("panel-title").textContent = d.title;
+    document.getElementById("panel-meta").innerHTML =
+      `${d.type} · ${d.category} · in ${inDeg} / out ${outDeg} · ` +
+      `<a href="./${d.path}" target="_blank">${d.path}</a>`;
+    const rewritten = rewriteWikilinks(d.body || "*(no content)*");
+    document.getElementById("panel-body").innerHTML = marked.parse(rewritten);
+    panel.classList.add("open");
+    // Wire wikilinks to switch panels
+    panel.querySelectorAll(".wikilink[data-target]").forEach(a => {
+      a.addEventListener("click", (e) => {
+        e.preventDefault();
+        const target = NODE_BY_ID[a.dataset.target];
+        if (target) {
+          showInfo(target);
+          // Briefly highlight in the graph
+          highlight(target);
+          setTimeout(unhighlight, 1500);
+        }
+      });
+    });
   }
+
+  document.getElementById("panel-close").addEventListener("click", () => {
+    document.getElementById("panel").classList.remove("open");
+  });
 
   // Type filter legend
   const types = [...new Set(DATA.nodes.map(n => n.type))].sort();
