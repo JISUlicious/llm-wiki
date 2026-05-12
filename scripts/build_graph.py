@@ -180,10 +180,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   }));
 
   const simulation = d3.forceSimulation(DATA.nodes)
-    .force("link", d3.forceLink(DATA.edges).id(d => d.id).distance(80).strength(0.6))
-    .force("charge", d3.forceManyBody().strength(-180))
+    .force("link", d3.forceLink(DATA.edges).id(d => d.id).distance(140).strength(0.35))
+    .force("charge", d3.forceManyBody().strength(-450).distanceMax(800))
     .force("center", d3.forceCenter(width / 2, height / 2))
-    .force("collide", d3.forceCollide().radius(20));
+    .force("collide", d3.forceCollide().radius(d => 12 + Math.sqrt(degree(d.id)) * 3));
 
   const link = g.append("g").selectAll("line")
     .data(DATA.edges).enter().append("line")
