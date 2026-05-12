@@ -171,7 +171,14 @@ For each significant entity identified:
 - Add any new `[[wikilinks]]` discovered
 - If new info contradicts existing content, add a `> [!warning] Contradiction` callout
 
-**If the entity page doesn't exist** and the entity is significant enough (mentioned substantively, not just in passing):
+**If the entity page doesn't exist**, create it if ANY of:
+- Mentioned substantively in this source (not just in passing)
+- Already exists as a tag on existing wiki pages (promote tag → page per SKILL.md Tag Policy)
+- Mentioned by name on 1+ existing wiki pages without being linked
+
+Default to a `status: draft` page when uncertain — drafts can be enriched on future ingests and are still queryable and linkable. Better a draft page than an inert tag.
+
+When creating:
 - Create `wiki/entities/{{kebab-case-name}}.md` with full frontmatter
 - Set `status: draft` if created from limited info in a single source; `status: complete` if substantial
 - Set `importance: high` for major entities (key researchers, foundational models), `medium` default, `low` for minor mentions
@@ -183,13 +190,32 @@ For each significant entity identified:
 Same logic as entities, but in `wiki/concepts/`:
 
 **If exists**: integrate new information, update sources, add cross-references
-**If new and significant**: create `wiki/concepts/{{kebab-case-name}}.md`. Set `status: draft` if derived from limited discussion in one source; `status: complete` if the concept is thoroughly covered. Set `importance` based on centrality to the wiki's domain.
+
+**If the concept page doesn't exist**, create it if ANY of:
+- Mentioned substantively in this source (not just in passing)
+- Already exists as a tag on existing wiki pages (promote tag → page per SKILL.md Tag Policy)
+- Mentioned by name on 1+ existing wiki pages without being linked
+
+Default to a `status: draft` page when uncertain. Set `importance` based on centrality to the wiki's domain.
 
 Concept pages should explain:
 - What the concept is
 - Why it matters
 - How it relates to other concepts in the wiki
 - What different sources say about it (synthesis, not just repetition)
+
+## Step 5.5: Tag Selection
+
+Apply the Tag Policy from SKILL.md to every page you created or updated.
+
+1. List the candidate tags you considered.
+2. For each candidate, run the three tests from SKILL.md:
+   - Existing page → DROP, link instead.
+   - Page-worthy concept → DROP, CREATE the page (re-enter Step 4 or 5), link it from the body.
+   - Purely organizational → KEEP.
+3. Cap at 3 tags per page. If you have more candidates than that, the surplus are almost certainly page-worthy.
+
+This step is mandatory — do not skip it even in batch mode.
 
 ## Step 6: Cross-Reference Pass
 

@@ -96,6 +96,33 @@ Content body with [[wikilinks]] to other wiki pages.
 - When mentioning an entity or concept that has its own page, always link it
 - When mentioning an entity or concept that SHOULD have its own page but doesn't, still link it (lint will catch these as missing pages)
 
+### Tag Policy
+
+Tags are a **thin organizational/Dataview layer**, NOT a substitute for pages. Most ingests should produce **zero or one** tag per page.
+
+**Before adding a tag, apply these tests in order:**
+1. **Does a page with this name (or close synonym) already exist?**
+   → DROP the tag. Use `[[wikilink]]` in the body instead.
+2. **Should a page exist?** If the term is a concept, entity, technique, or theme that could plausibly anchor its own page, create the page (even as a `status: draft` stub) during this same operation, and link it from the body. Do NOT tag.
+3. **Is it purely organizational?** (e.g., a year, a venue, a source-format marker like `pdf` or `arxiv`, a domain-wide grouping that doesn't warrant a page.)
+   → KEEP as tag.
+
+**Hard rules:**
+- Tag values MUST be kebab-case.
+- Max 3 tags per page.
+- A tag value MUST NOT match the slug of any existing wiki page (lint flags this).
+- A tag value SHOULD NOT be a noun phrase that names a concept or entity — link the page instead.
+
+**Promotion threshold:** if a tag appears on ≥3 pages with no matching page, lint surfaces it as a promotion candidate.
+
+**Common anti-patterns to avoid:**
+- Tagging with a model family name (`gpt`, `bert`) — link the specific model page instead.
+- Tagging with a technique name (`attention`, `prompting`) — those should be concept pages.
+- Tagging with a research direction (`alignment`, `reasoning`, `interpretability`) — those should be concept pages.
+- Tagging with an author affiliation (`google-brain`, `princeton`) — link the lab/institution entity page.
+
+Valid tags after this filter typically look like: `pdf`, `paper`, `2024`, `iclr-2023`, `survey`. The set is small.
+
 ### Index Format (`wiki/index.md`)
 
 Organized by category with one-line summaries:
@@ -133,9 +160,15 @@ Operations: `init`, `ingest`, `query`, `lint`
 
 ### When to Create a New Page vs. Update Existing
 
-- **New page**: when an entity, concept, or topic is substantive enough to warrant its own page (mentioned in 2+ sources, or has enough detail for >3 paragraphs)
+- **New page**: when an entity, concept, or topic is substantive enough to warrant its own page. Substantive means ANY of:
+  - Mentioned in 2+ sources
+  - Has enough detail for >3 paragraphs
+  - **Has appeared (or would appear) as a tag on multiple pages** — that signals an underlying concept; promote to a page
+  - Mentioned by name on 3+ existing pages without already being a `[[wikilink]]`
 - **Update existing**: when new information relates to an entity/concept that already has a page
 - **Section in another page**: when a topic is minor and only relevant in the context of a parent page
+
+**Bias toward creating pages over tagging.** A page is interlinkable, queryable, and grows over time. A tag is a string label. When in doubt, create a `status: draft` page with whatever you know and let future ingests fill it out.
 
 ### Contradiction Handling
 

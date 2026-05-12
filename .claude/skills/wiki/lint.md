@@ -83,6 +83,24 @@ Identify areas where the wiki's coverage is thin and suggest external sources to
 
 **How to scan**: Read frontmatter of all wiki pages. For draft pages and single-source pages, generate a concrete search query string the user could paste into Google Scholar, Semantic Scholar, or a search engine.
 
+### 9. Tag Hygiene (Warning/Suggestion)
+
+Tags should be a thin organizational layer per SKILL.md Tag Policy. Scan all wiki pages and flag:
+
+**Warning — tag duplicates a page slug.** A tag value that matches an existing page filename. Report each occurrence as `page X has tag Y which duplicates [[Y]] — drop the tag and link the page in the body if not already linked`.
+
+**Warning — over-tagged pages.** Pages with more than 3 tags. Suggest which tags to drop based on the Tag Policy anti-patterns.
+
+**Suggestion — promotion candidates.** Tags appearing on ≥3 pages with no corresponding page. Report top 10 by frequency:
+```
+- Promote tag `<tag-name>` (on N pages: [[page-a]], [[page-b]], ...) — create `wiki/concepts/<tag-name>.md` (or `wiki/entities/` if it's an entity).
+```
+
+**How to scan**:
+1. Glob `{WIKI}/**/*.md`, parse frontmatter, collect (page → tags) pairs.
+2. Compute tag frequencies and the set of existing page slugs.
+3. For each tag: check duplicates (vs slugs), check page count (vs promotion threshold), check per-page count (vs max=3).
+
 ## Report Format
 
 Group findings by severity:
@@ -123,6 +141,9 @@ For auto-fix:
 - **Missing frontmatter**: Generate reasonable defaults based on file location and content.
 - **Missing pages**: Create stub pages with basic content derived from how the concept is discussed in existing pages.
 - **Cross-ref gaps**: Add `[[wikilinks]]` around unlinked mentions.
+- **Tag promotion**: For each promotion candidate, create a stub concept/entity page derived from contexts where the tag appears (Grep the tagged pages, extract a short description). Remove the tag from those pages and replace mentions with `[[wikilink]]` where appropriate.
+- **Tag-as-page duplicates**: Remove the duplicating tag; ensure the body links the page.
+- **Over-tagged pages**: Drop the most page-worthy tags by promoting them (see above); keep at most 3 purely organizational tags.
 
 ## Log
 
