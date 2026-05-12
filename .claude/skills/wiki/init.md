@@ -52,38 +52,73 @@ mkdir -p "$HOME/Library/Mobile Documents/iCloud~md~obsidian/Documents/MyVault/wi
 # ... etc
 ```
 
-## Step 3: Generate CLAUDE.md (domain schema only)
+## Step 3: Generate CLAUDE.md
 
-Create `CLAUDE.md` at the project root. Keep it **strictly domain-specific** — skill mechanics (directory layout, frontmatter shape, ingest steps, link format) live in `.claude/skills/wiki/SKILL.md` and must NOT be duplicated here. Use this minimal template, customized from the user's Step 1 answers:
+Create `CLAUDE.md` at the project root. Tailor it to the user's domain based on their answers in Step 1. Use this template as a starting point, but customize the domain-specific sections:
 
 ```markdown
-# {{Domain}} Wiki — Project Schema
-
-This file is project-specific guidance for the wiki. It defines what this wiki covers and any domain conventions. Skill mechanics live in `.claude/skills/wiki/SKILL.md`.
+# LLM Wiki Schema
 
 ## Domain
 
-{{Description of what this wiki covers, based on user's answer — topic, scope, intended audience}}
+{{Description of what this wiki covers, based on user's answer}}
 
 ## Source Types
 
-{{Bullet list of expected source types and what to extract from each — e.g., "Research papers: extract method, results, limitations"; "Podcast transcripts: extract speaker attributions and notable quotes". Be specific to this domain.}}
+{{List of expected source types and how to handle each}}
 
-## Domain-Specific Page Guidance
+## Page Types
 
-Augments the skill's generic page-type definitions. Only include entries where there's domain-specific guidance worth saying:
+### Entities
+Pages for distinct things: people, organizations, products, places, events.
+- Directory: `wiki/entities/`
+- Naming: `kebab-case-name.md`
+- {{Domain-specific entity guidance}}
 
-- **{{entity subtype 1}}** (entity pages): {{what to capture, e.g., "include affiliation, key contributions"}}
-- **{{entity subtype 2}}** (entity pages): {{...}}
-- **Concepts**: {{any domain-specific conventions for concept pages, e.g., "include mathematical formulation when applicable"}}
+### Concepts
+Pages for ideas, theories, techniques, patterns, methodologies.
+- Directory: `wiki/concepts/`
+- Naming: `kebab-case-name.md`
+- {{Domain-specific concept guidance}}
 
-## Domain Conventions
+### Source Summaries
+One page per ingested source document. Captures key claims, data, and takeaways.
+- Directory: `wiki/sources/`
+- Naming: `kebab-case-short-title.md`
 
-{{Only include conventions that are specific to this domain. Skip generic markdown/wiki conventions — those live in SKILL.md. Examples worth including: domain notation (LaTeX for math, code-block language for snippets), citation styles, terminology preferences.}}
+### Comparisons
+Side-by-side analyses, comparison tables, tradeoff discussions.
+- Directory: `wiki/comparisons/`
+- Naming: `kebab-case-comparison-title.md`
+
+### Queries
+Filed answers to questions asked against the wiki.
+- Directory: `wiki/queries/`
+- Naming: `kebab-case-question-slug.md`
+
+## Conventions
+
+- All wiki pages use YAML frontmatter with: title, type, created, updated, sources, tags
+- Use `[[wikilinks]]` for internal links (Obsidian-compatible)
+- File names are kebab-case, no spaces
+- Dates use YYYY-MM-DD format
+- When new information contradicts existing content, use `> [!warning] Contradiction` callouts
+- {{Any domain-specific conventions from user}}
+
+## Frontmatter Schema
+
+```yaml
+title: string (required)
+type: entity | concept | source | comparison | query (required)
+created: YYYY-MM-DD (required)
+updated: YYYY-MM-DD (required)
+sources: list of source filenames (required for all except overview/index)
+tags: list of strings (optional but encouraged)
+```
 
 ## Maintenance Notes
 
-This file is co-evolved between you and the LLM. As you work with the wiki, update this schema to reflect new domain conventions or important entity types that emerge. Skill-level mechanics (link format, frontmatter shape, directory layout) belong in `.claude/skills/wiki/`, not here.
+This file is co-evolved between you and the LLM. As you work with the wiki, update this schema to reflect new conventions, page types, or workflows that emerge.
 ```
 
 ## Step 4: Create {WIKI}/index.md
