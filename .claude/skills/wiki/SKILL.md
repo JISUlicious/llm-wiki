@@ -115,6 +115,13 @@ Tags are a **thin organizational/Dataview layer**, NOT a substitute for pages. M
 
 **Promotion threshold:** if a tag appears on ≥3 pages with no matching page, lint surfaces it as a promotion candidate.
 
+**Entity classification tags (exception to the "no noun phrases" rule):**
+- Every page with `type: entity` MUST carry **exactly one** classification tag identifying its sub-type (e.g., `person`, `org`, `product`).
+- These tags are pure taxonomy markers — they do not name page-worthy concepts, so they are exempt from the "tag SHOULD NOT be a noun phrase" rule.
+- The valid classification vocabulary is **domain-specific** and is defined in the project's `CLAUDE.md`. A music-history wiki might use `composer | ensemble | venue | instrument`; an ML wiki uses `person | model | org | university | product | event`. Lint enforces that every entity page has exactly one tag from the project's declared vocabulary.
+- Classification tags consume one of the page's 3 tag slots; the remaining 2 are available for organizational tags (year, source-format, etc.).
+- This rule applies only to `type: entity`. Concept, source, comparison, and query pages do not require a classification tag.
+
 **Common anti-patterns to avoid:**
 - Tagging with a model family name (`gpt`, `bert`) — link the specific model page instead.
 - Tagging with a technique name (`attention`, `prompting`) — those should be concept pages.

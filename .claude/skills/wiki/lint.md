@@ -83,23 +83,32 @@ Identify areas where the wiki's coverage is thin and suggest external sources to
 
 **How to scan**: Read frontmatter of all wiki pages. For draft pages and single-source pages, generate a concrete search query string the user could paste into Google Scholar, Semantic Scholar, or a search engine.
 
-### 9. Tag Hygiene (Warning/Suggestion)
+### 9. Tag Hygiene (Error/Warning/Suggestion)
 
 Tags should be a thin organizational layer per SKILL.md Tag Policy. Scan all wiki pages and flag:
 
-**Warning — tag duplicates a page slug.** A tag value that matches an existing page filename. Report each occurrence as `page X has tag Y which duplicates [[Y]] — drop the tag and link the page in the body if not already linked`.
+**Error — entity classification tag missing/invalid.** Every `type: entity` page MUST carry **exactly one** tag from the entity classification vocabulary declared in `CLAUDE.md` (per SKILL.md → Tag Policy → "Entity classification tags"). Report per-page violations:
+- Zero classification tags on an entity page → `entity X missing required classification tag (allowed: <vocabulary>)`
+- Multiple classification tags on an entity page → `entity X has multiple classification tags {a, b}; keep exactly one`
+- A tag that looks like a classification (e.g., `model`, `person`) but isn't in the declared vocabulary → `entity X uses classification-like tag Y not in CLAUDE.md vocabulary; either add Y to the vocabulary or use an allowed tag`
 
-**Warning — over-tagged pages.** Pages with more than 3 tags. Suggest which tags to drop based on the Tag Policy anti-patterns.
+**How to find the vocabulary**: Read `CLAUDE.md` and look for the "Entity classification vocabulary" table. The first column gives the allowed values.
 
-**Suggestion — promotion candidates.** Tags appearing on ≥3 pages with no corresponding page. Report top 10 by frequency:
+**Warning — tag duplicates a page slug.** A tag value that matches an existing page filename. Report each occurrence as `page X has tag Y which duplicates [[Y]] — drop the tag and link the page in the body if not already linked`. *Classification tags are exempt — they are taxonomy markers and don't have matching pages.*
+
+**Warning — over-tagged pages.** Pages with more than 3 tags. Suggest which tags to drop based on the Tag Policy anti-patterns. *The entity classification tag must not be dropped to stay under the limit; remove organizational tags first.*
+
+**Suggestion — promotion candidates.** Non-classification tags appearing on ≥3 pages with no corresponding page. Report top 10 by frequency:
 ```
 - Promote tag `<tag-name>` (on N pages: [[page-a]], [[page-b]], ...) — create `wiki/concepts/<tag-name>.md` (or `wiki/entities/` if it's an entity).
 ```
 
 **How to scan**:
-1. Glob `{WIKI}/**/*.md`, parse frontmatter, collect (page → tags) pairs.
-2. Compute tag frequencies and the set of existing page slugs.
-3. For each tag: check duplicates (vs slugs), check page count (vs promotion threshold), check per-page count (vs max=3).
+1. Glob `{WIKI}/**/*.md`, parse frontmatter, collect (page → tags, type) tuples.
+2. Read `CLAUDE.md` to obtain the entity classification vocabulary (parse the table).
+3. Compute tag frequencies and the set of existing page slugs.
+4. For each `type: entity` page: check that exactly one tag is in the vocabulary.
+5. For each non-classification tag: check duplicates (vs slugs), check page count (vs promotion threshold), check per-page count (vs max=3).
 
 ## Report Format
 

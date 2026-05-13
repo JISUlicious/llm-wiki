@@ -182,6 +182,7 @@ When creating:
 - Create `wiki/entities/{{kebab-case-name}}.md` with full frontmatter
 - Set `status: draft` if created from limited info in a single source; `status: complete` if substantial
 - Set `importance: high` for major entities (key researchers, foundational models), `medium` default, `low` for minor mentions
+- Assign **exactly one classification tag** from the entity vocabulary defined in `CLAUDE.md` (e.g., `person`, `model`, `org`). This is mandatory — see Tag Policy "Entity classification tags" in SKILL.md.
 - Write a description based on what this source says about the entity
 - Link to the source summary page and any related entity/concept pages
 
